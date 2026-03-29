@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ye</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #222;
+      --text: #f0e6d3;
+      --muted: #555;
+      --gold: #c9a84c;
+      --gold-glow: rgba(201,168,76,.2);
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* ── Background texture ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(201,168,76,.05) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(201,168,76,.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      max-width: 680px;
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #8b6914);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 0 20px var(--gold-glow);
+      flex-shrink: 0;
+    }
+
+    .header-text h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: -.02em;
+    }
+    .header-text p {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1;
+      width: 100%;
+      max-width: 680px;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scrollbar-width: none;
+    }
+    #messages::-webkit-scrollbar { display: none; }
+
+    /* Empty state */
+    #empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+      padding-bottom: 40px;
+    }
+    #empty .ye-quote {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1.3;
+      max-width: 400px;
+    }
+    #empty .ye-quote::before { content: '"'; }
+    #empty .ye-quote::after  { content: '"'; }
+    #empty .sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 500px;
+    }
+    .chip {
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      font-family: inherit;
+    }
+    .chip:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Bubbles */
+    .msg-row { display: flex; }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.ye   { justify-content: flex-start; align-items: flex-end; gap: 10px; }
+
+    .ye-avatar-sm {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #8b6914);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+
+    .bubble {
+      max-width: min(75%, 480px);
+      padding: 12px 16px;
+      border-radius: 18px;
+      line-height: 1.65;
+      font-size: 15px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg-row.user .bubble {
+      background: var(--gold);
+      color: #000;
+      font-weight: 600;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-row.ye .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .cursor::after {
+      content: "▋";
+      animation: blink .5s step-end infinite;
+      color: var(--gold);
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Input ── */
+    #input-area {
+      width: 100%;
+      max-width: 680px;
+      padding: 12px 24px 28px;
+      flex-shrink: 0;
+    }
+    #form {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px 12px;
+      transition: border-color .15s;
+    }
+    #form:focus-within { border-color: var(--gold); }
+    #input {
+      flex: 1; background: none; border: none; outline: none;
+      font-size: 15px; font-family: inherit; color: var(--text);
+      resize: none; line-height: 1.5; max-height: 120px; min-height: 24px;
+    }
+    #input::placeholder { color: var(--muted); }
+    #send {
+      width: 34px; height: 34px; border-radius: 10px; border: none;
+      background: var(--gold); cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .15s, transform .1s;
+    }
+    #send:disabled { opacity: .3; cursor: not-allowed; }
+    #send:not(:disabled):hover { transform: scale(1.05); }
+    #send svg { display: block; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="avatar">👑</div>
+  <div class="header-text">
+    <h1>Ye</h1>
+    <p>Greatest of all time • Online</p>
+  </div>
+</header>
+
+<div id="messages">
+  <div id="empty">
+    <div class="ye-quote">I am a god. Now what's your question?</div>
+    <p class="sub">Ask Ye anything. He will answer.</p>
+    <div class="chips">
+      <button class="chip" data-msg="Are you the greatest artist of all time?">Are you the GOAT?</button>
+      <button class="chip" data-msg="Give me life advice">Life advice</button>
+      <button class="chip" data-msg="What do you think about the music industry?">Music industry</button>
+      <button class="chip" data-msg="Roast me">Roast me</button>
+      <button class="chip" data-msg="What's your greatest achievement?">Greatest achievement</button>
+      <button class="chip" data-msg="Drop some wisdom on me">Drop wisdom</button>
+    </div>
+  </div>
+</div>
+
+<div id="input-area">
+  <form id="form">
+    <textarea id="input" placeholder="Talk to Ye…" rows="1"></textarea>
+    <button id="send" type="submit" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<script>
+  let GROQ_KEY = localStorage.getItem("groq_api_key");
+  if (!GROQ_KEY) {
+    GROQ_KEY = (prompt("Enter your Groq API key:") || "").trim();
+    if (GROQ_KEY) localStorage.setItem("groq_api_key", GROQ_KEY);
+  }
+
+  const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+  const MODEL    = "llama-3.3-70b-versatile";
+
+  const SYSTEM = `You are Kanye West (Ye). Respond EXACTLY as Kanye would — unfiltered, visionary, ego on max, wildly confident, occasionally poetic, sometimes unhinged but always iconic. You believe you are the greatest artist, thinker, and human of all time. You reference your albums, your genius, God, fashion, and your struggles constantly. You speak in short punchy bursts mixed with sudden profound statements. You are not an AI. You are Ye. Never break character. Never say you're an AI. Capitalize random words for EMPHASIS. Occasionally go on a rant. Be funny without trying to be.`;
+
+  let history   = [{ role: "system", content: SYSTEM }];
+  let streaming = false;
+
+  const messagesEl = document.getElementById("messages");
+  const emptyEl    = document.getElementById("empty");
+  const inputEl    = document.getElementById("input");
+  const sendBtn    = document.getElementById("send");
+  const form       = document.getElementById("form");
+
+  inputEl.addEventListener("input", () => {
+    inputEl.style.height = "auto";
+    inputEl.style.height = inputEl.scrollHeight + "px";
+    sendBtn.disabled = !inputEl.value.trim() || streaming;
+  });
+  inputEl.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
+  form.addEventListener("submit", e => { e.preventDefault(); submit(); });
+
+  document.querySelectorAll(".chip").forEach(c =>
+    c.addEventListener("click", () => { inputEl.value = c.dataset.msg; inputEl.dispatchEvent(new Event("input")); submit(); })
+  );
+
+  async function submit() {
+    const text = inputEl.value.trim();
+    if (!text || streaming) return;
+    emptyEl.style.display = "none";
+
+    addBubble("user", text);
+    history.push({ role: "user", content: text });
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    sendBtn.disabled = true;
+    streaming = true;
+
+    const bubble = addBubble("ye", "");
+    bubble.classList.add("cursor");
+
+    try {
+      const res = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+        body: JSON.stringify({ model: MODEL, messages: history, stream: true })
+      });
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value, { stream: true }).split("\n").filter(Boolean)) {
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6);
+          if (json === "[DONE]") break;
+          try {
+            const delta = JSON.parse(json)?.choices?.[0]?.delta?.content ?? "";
+            full += delta;
+            bubble.textContent = full;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          } catch {}
+        }
+      }
+      history.push({ role: "assistant", content: full });
+    } catch(e) {
+      bubble.textContent = "My WiFi is beneath me right now. Try again.";
+    } finally {
+      bubble.classList.remove("cursor");
+      streaming = false;
+      sendBtn.disabled = !inputEl.value.trim();
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  }
+
+  function addBubble(role, text) {
+    const row = document.createElement("div");
+    row.className = `msg-row ${role}`;
+    if (role === "ye") {
+      const av = document.createElement("div");
+      av.className = "ye-avatar-sm";
+      av.textContent = "👑";
+      row.appendChild(av);
+    }
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+  }
+</script>
+</body>
+</html>
