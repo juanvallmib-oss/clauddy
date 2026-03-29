@@ -164,6 +164,15 @@
   const MODEL          = "llama-3.3-70b-versatile";
   const SYSTEM_PROMPT  = `You are Clauddy, a highly intelligent personal AI assistant. You are witty, dry, and subtly sarcastic — but always helpful and loyal. Keep responses concise (1-4 sentences) since this is a voice interface. No bullet points or markdown. Speak naturally as if talking out loud.`;
 
+  // ElevenLabs TTS
+  let EL_KEY = localStorage.getItem("el_api_key") || "";
+  if (!EL_KEY) {
+    EL_KEY = (prompt("Enter your ElevenLabs API key (free at elevenlabs.io):") || "").trim();
+    if (EL_KEY) localStorage.setItem("el_api_key", EL_KEY);
+  }
+  const EL_VOICE_ID = "onwK4e9ZLuTAKqWW03F9"; // Daniel — British male, natural
+  const EL_URL      = `https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE_ID}`;
+
   // ── State ─────────────────────────────────────────────────────────────────
   // 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
   let appState       = 'idle';
@@ -285,19 +294,8 @@
     audioCtx?.close();
   }
 
-  // Unlock speechSynthesis on iOS (must be called inside a user gesture)
-  let speechUnlocked = false;
-  function unlockSpeech() {
-    if (speechUnlocked) return;
-    speechUnlocked = true;
-    const u = new SpeechSynthesisUtterance('');
-    u.volume = 0;
-    speechSynthesis.speak(u);
-  }
-
   // Manual stop/start toggle
   function toggleMic() {
-    unlockSpeech();
     if (appState === 'recording')                    { stopRecording(); inConversation = false; return; }
     if (appState === 'transcribing' || appState === 'thinking') return;
     if (appState === 'speaking')                     { stopSpeaking(); }
@@ -356,39 +354,54 @@
     }
   }
 
-  // ── Speech synthesis ──────────────────────────────────────────────────────
-  let currentUtterance = null;
+  // ── ElevenLabs TTS ────────────────────────────────────────────────────────
+  let currentAudio = null;
 
-  function speak(text) {
+  async function speak(text) {
     appState = 'speaking';
     if (muted) { afterSpeak(); return; }
     setStatus("Speaking...");
     orbWrap.classList.add("speaking");
-    speechSynthesis.cancel();
 
-    const utter = new SpeechSynthesisUtterance(text.replace(/[*_`#]/g, ""));
-    const voices = speechSynthesis.getVoices();
-    const pick = voices.find(v => v.name.includes("Daniel") || v.name.includes("Google UK English Male") || v.name.includes("Arthur"))
-               || voices.find(v => v.lang.startsWith("en"));
-    if (pick) utter.voice = pick;
-    utter.rate = 0.97;
-    utter.pitch = 0.85;
-    currentUtterance = utter;
+    const clean = text.replace(/[*_`#]/g, "");
 
-    let done = false;
-    const finish = () => { if (done) return; done = true; currentUtterance = null; afterSpeak(); };
-    utter.onend  = finish;
-    utter.onerror = finish;
-    // Fallback: Chrome/iOS sometimes never fires onend
-    setTimeout(finish, Math.max(5000, text.split(" ").length * 500));
+    try {
+      const res = await fetch(EL_URL, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': EL_KEY,
+          'Content-Type': 'application/json',
+          'Accept': 'audio/mpeg'
+        },
+        body: JSON.stringify({
+          text: clean,
+          model_id: 'eleven_turbo_v2_5',
+          voice_settings: { stability: 0.45, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true }
+        })
+      });
 
-    speechSynthesis.speak(utter);
+      if (!res.ok) throw new Error("ElevenLabs error " + res.status);
+
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      currentAudio = new Audio(url);
+      currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; afterSpeak(); };
+      currentAudio.onerror = () => { URL.revokeObjectURL(url); currentAudio = null; afterSpeak(); };
+      await currentAudio.play();
+    } catch(e) {
+      // Fallback to speechSynthesis if ElevenLabs fails
+      console.warn("ElevenLabs failed, falling back:", e);
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.onend = utter.onerror = afterSpeak;
+      setTimeout(afterSpeak, Math.max(5000, clean.split(" ").length * 500));
+      speechSynthesis.speak(utter);
+    }
   }
 
   function stopSpeaking() {
-    speechSynthesis.cancel();
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    else speechSynthesis.cancel();
     orbWrap.classList.remove("speaking");
-    currentUtterance = null;
     appState = 'idle';
   }
 
