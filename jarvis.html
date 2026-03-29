@@ -322,7 +322,7 @@
     mediaRecorder = new MediaRecorder(micStream, mime ? { mimeType: mime } : {});
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = transcribe;
-    mediaRecorder.start();
+    mediaRecorder.start(250); // collect data every 250ms so we don't miss audio
 
     orbWrap.classList.add("recording");
     btnMic.classList.add("active");
@@ -353,11 +353,16 @@
 
   // ── Whisper transcription ─────────────────────────────────────────────────
   async function transcribe() {
-    if (!audioChunks.length) { appState = 'idle'; afterSpeak(); return; }
-
-    const mimeType = mediaRecorder.mimeType || 'audio/webm';
+    const mimeType = mediaRecorder?.mimeType || 'audio/webm';
     const ext      = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
     const blob     = new Blob(audioChunks, { type: mimeType });
+
+    // Skip if recording is too short/empty (< 5KB is basically silence)
+    if (!audioChunks.length || blob.size < 5000) {
+      appState = 'idle';
+      if (inConversation) setTimeout(startRecording, 400); else if (hasWake) startWake(); else setStatus("Tap to start");
+      return;
+    }
 
     const form = new FormData();
     form.append('file', blob, `audio.${ext}`);
