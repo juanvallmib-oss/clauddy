@@ -289,7 +289,10 @@
 
 <header>
   <h1>Clauddy</h1>
-  <span class="model-badge" id="model-label" title="Click to change model">llava</span>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="btn-new-chat" style="font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;color:var(--muted);">New chat</button>
+    <span class="model-badge" id="model-label" title="Click to change model">llava</span>
+  </div>
 </header>
 
 <div id="messages">
@@ -342,7 +345,19 @@
   const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
   let model = "llama-3.3-70b-versatile";
   const SYSTEM = { role: "system", content: "Your name is Clauddy. You are a helpful AI assistant." };
-  let history = []; // { role, content }
+  const HISTORY_KEY = "clauddy_history";
+  const MAX_STORED  = 60; // keep last 60 messages in localStorage
+
+  function saveHistory() {
+    const trimmed = history.slice(-MAX_STORED);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  }
+
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; }
+  }
+
+  let history = loadHistory();
   let streaming = false;
 
   const messagesEl = document.getElementById("messages");
@@ -352,6 +367,25 @@
   const form       = document.getElementById("form");
   const toast      = document.getElementById("toast");
   const modelLabel = document.getElementById("model-label");
+  const newChatBtn = document.getElementById("btn-new-chat");
+
+  // Restore previous conversation
+  if (history.length) {
+    emptyEl.style.display = "none";
+    history.forEach(msg => {
+      if (msg.role === "user" || msg.role === "assistant")
+        addBubble(msg.role === "user" ? "user" : "ai", msg.content);
+    });
+    scrollBottom();
+  }
+
+  newChatBtn.addEventListener("click", () => {
+    if (!confirm("Start a new chat? This will clear the current conversation.")) return;
+    history = [];
+    saveHistory();
+    messagesEl.querySelectorAll(".msg-row").forEach(r => r.remove());
+    emptyEl.style.display = "";
+  });
 
   // ── Auto-resize textarea ──
   inputEl.addEventListener("input", () => {
@@ -450,6 +484,7 @@
       }
 
       history.push({ role: "assistant", content: full });
+      saveHistory();
 
     } catch (err) {
       aiBubble.textContent = "";
