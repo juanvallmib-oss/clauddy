@@ -8,45 +8,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0d0d0d;
-      --surface: #161616;
-      --border: #2a2a2a;
-      --text: #e8e8e8;
-      --muted: #555;
-      --accent: #5b6af0;
-      --accent-light: rgba(91,106,240,.12);
-      --orb-glow: rgba(91,106,240,.3);
+      --bg: #0d0d0d; --surface: #161616; --border: #2a2a2a;
+      --text: #e8e8e8; --muted: #555; --accent: #5b6af0;
+      --accent-light: rgba(91,106,240,.12); --orb-glow: rgba(91,106,240,.3);
       --radius: 16px;
     }
-
     body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100dvh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text);
+      height: 100dvh; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-
     .blob { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; opacity: .4; }
     .blob-1 { width: 400px; height: 400px; background: #1a1d5e; top: -120px; left: -100px; }
     .blob-2 { width: 350px; height: 350px; background: #12154a; bottom: -80px; right: -60px; }
 
     header {
       position: fixed; top: 0; left: 0; right: 0;
-      padding: 20px 28px;
-      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 28px; display: flex; justify-content: space-between; align-items: center;
     }
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: var(--accent); display: flex; align-items: center;
-      justify-content: center; font-size: 18px;
+      width: 34px; height: 34px; border-radius: 10px; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
       box-shadow: 0 4px 12px var(--orb-glow);
     }
     .logo h1 { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
@@ -57,37 +41,30 @@
     }
 
     .orb-wrap { position: relative; width: 200px; height: 200px; margin-bottom: 40px; }
-
     .ring { position: absolute; border-radius: 50%; border: 2px solid transparent; }
     .ring-1 { inset: -16px; border-top-color: rgba(91,106,240,.25); border-right-color: rgba(91,106,240,.25); animation: spin 6s linear infinite; }
     .ring-2 { inset: -30px; border-bottom-color: rgba(91,106,240,.15); border-left-color: rgba(91,106,240,.15); animation: spin 10s linear infinite reverse; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .orb {
       position: absolute; inset: 0; border-radius: 50%;
       background: radial-gradient(circle at 38% 32%, #8b97f8, #5b6af0 55%, #3d4de0);
       box-shadow: 0 0 0 8px rgba(91,106,240,.1), 0 8px 32px rgba(91,106,240,.35), 0 20px 60px rgba(91,106,240,.15);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: transform .2s, box-shadow .2s;
-      font-size: 52px; user-select: none;
+      cursor: pointer; transition: transform .2s, box-shadow .2s; font-size: 52px; user-select: none;
     }
-    .orb:hover { transform: scale(1.04); box-shadow: 0 0 0 12px rgba(91,106,240,.15), 0 12px 40px rgba(91,106,240,.5); }
-
-    .orb-wrap.listening .orb { animation: pulse-listen .8s ease-in-out infinite; }
-    .orb-wrap.speaking .orb  { animation: pulse-speak .5s ease-in-out infinite; }
+    .orb:hover { transform: scale(1.04); }
+    .orb-wrap.recording .orb { animation: pulse-listen .8s ease-in-out infinite; }
+    .orb-wrap.speaking  .orb { animation: pulse-speak  .5s ease-in-out infinite; }
     @keyframes pulse-listen {
       0%,100% { transform: scale(1);    box-shadow: 0 0 0 8px rgba(91,106,240,.1), 0 8px 32px rgba(91,106,240,.35); }
       50%      { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(91,106,240,.2), 0 12px 50px rgba(91,106,240,.55); }
     }
-    @keyframes pulse-speak {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.08); }
-    }
+    @keyframes pulse-speak { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
     .wave { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; align-items: flex-end; }
     .wave span { display: block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; opacity: .3; }
-    .orb-wrap.listening .wave span,
-    .orb-wrap.speaking .wave span { opacity: 1; animation: bounce .6s ease-in-out infinite; }
+    .orb-wrap.recording .wave span,
+    .orb-wrap.speaking  .wave span { opacity: 1; animation: bounce .6s ease-in-out infinite; }
     .wave span:nth-child(1) { animation-delay: 0s; }
     .wave span:nth-child(2) { animation-delay: .12s; }
     .wave span:nth-child(3) { animation-delay: .24s; }
@@ -99,9 +76,8 @@
       font-size: 13px; font-weight: 600; letter-spacing: .03em;
       color: var(--accent); background: var(--accent-light);
       border: 1.5px solid rgba(91,106,240,.15);
-      padding: 5px 16px; border-radius: 20px;
-      margin-bottom: 20px; min-height: 32px;
-      display: flex; align-items: center;
+      padding: 5px 16px; border-radius: 20px; margin-bottom: 20px;
+      min-height: 32px; display: flex; align-items: center;
     }
 
     #transcript-box {
@@ -113,7 +89,7 @@
     #transcript-box::-webkit-scrollbar { display: none; }
     #log { display: flex; flex-direction: column; gap: 10px; }
     .log-entry { display: flex; flex-direction: column; gap: 3px; }
-    .log-entry .label { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
+    .log-entry .label  { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
     .log-entry .you    { font-size: 14px; font-weight: 600; color: var(--accent); }
     .log-entry .clauddy { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.6; }
 
@@ -122,7 +98,7 @@
       width: 58px; height: 58px; border-radius: 50%; border: none;
       background: var(--accent); color: #fff; font-size: 22px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 6px 20px var(--orb-glow); transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 6px 20px var(--orb-glow); transition: transform .15s;
     }
     .btn-main:hover  { transform: scale(1.07); }
     .btn-main.active { background: #e05555; box-shadow: 0 6px 20px rgba(224,85,85,.4); }
@@ -134,7 +110,6 @@
       transition: border-color .15s, color .15s, transform .15s;
     }
     .btn-small:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.05); }
-
     .hint { position: fixed; bottom: 22px; font-size: 12px; font-weight: 600; color: var(--muted); }
   </style>
 </head>
@@ -154,77 +129,58 @@
 <div class="orb-wrap" id="orb">
   <div class="ring ring-1"></div>
   <div class="ring ring-2"></div>
-  <div class="orb" id="orb-btn" title="Click to speak">
+  <div class="orb" id="orb-btn" title="Tap to speak">
     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
       <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-      <line x1="12" y1="19" x2="12" y2="23"/>
-      <line x1="8" y1="23" x2="16" y2="23"/>
+      <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
     </svg>
   </div>
   <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
 </div>
 
-<div id="status">Starting...</div>
+<div id="status">Tap to start</div>
 
-<div id="transcript-box">
-  <div id="log"></div>
-</div>
+<div id="transcript-box"><div id="log"></div></div>
 
 <div class="controls">
   <button class="btn-small" id="btn-mute" title="Mute voice">🔊</button>
-  <button class="btn-main" id="btn-mic" title="Click to speak">🎙️</button>
+  <button class="btn-main"  id="btn-mic"  title="Tap to speak">🎙️</button>
   <button class="btn-small" id="btn-clear" title="Clear chat">🗑️</button>
 </div>
 
-<p class="hint">Say «Hey Clauddy» or click the orb</p>
+<p class="hint">Tap the orb to talk — auto-listens during conversation</p>
 
 <script>
-  // ── API key ──────────────────────────────────────────────────────────────
+  // ── API Key ───────────────────────────────────────────────────────────────
   let GROQ_KEY = localStorage.getItem("groq_api_key");
   if (!GROQ_KEY) {
-    GROQ_KEY = prompt("Enter your Groq API key (get one free at console.groq.com):");
+    GROQ_KEY = prompt("Enter your Groq API key (free at console.groq.com):");
     if (GROQ_KEY) localStorage.setItem("groq_api_key", GROQ_KEY.trim());
     GROQ_KEY = GROQ_KEY?.trim() || "";
   }
-  const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-  const MODEL    = "llama-3.3-70b-versatile";
-  const SYSTEM_PROMPT = `You are Clauddy, a highly intelligent personal AI assistant. You are witty, dry, and subtly sarcastic — but always helpful and loyal. Keep responses concise (1-4 sentences) since this is a voice interface. No bullet points or markdown. Speak naturally as if talking out loud.`;
+  const GROQ_CHAT_URL  = "https://api.groq.com/openai/v1/chat/completions";
+  const GROQ_STT_URL   = "https://api.groq.com/openai/v1/audio/transcriptions";
+  const MODEL          = "llama-3.3-70b-versatile";
+  const SYSTEM_PROMPT  = `You are Clauddy, a highly intelligent personal AI assistant. You are witty, dry, and subtly sarcastic — but always helpful and loyal. Keep responses concise (1-4 sentences) since this is a voice interface. No bullet points or markdown. Speak naturally as if talking out loud.`;
 
-  // ── State ────────────────────────────────────────────────────────────────
-  // states: 'wake' | 'command' | 'thinking' | 'speaking'
-  let appState      = 'wake';
-  let inConversation = false;   // true after wake word — auto-listens after each reply
-  let idleTimer     = null;     // resets to wake mode after 30s silence
-  let history  = [{ role: "system", content: SYSTEM_PROMPT }];
-  let muted    = false;
-  let recog    = null;
+  // ── State ─────────────────────────────────────────────────────────────────
+  // 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
+  let appState       = 'idle';
+  let inConversation = false;
+  let idleTimer      = null;
+  let history        = [{ role: "system", content: SYSTEM_PROMPT }];
+  let muted          = false;
 
-  function enterConversation() {
-    inConversation = true;
-    resetIdleTimer();
-  }
+  // Recording
+  let mediaRecorder  = null;
+  let audioChunks    = [];
+  let micStream      = null;
+  let audioCtx       = null;
+  let silenceTimer   = null;
+  let rafId          = null;
 
-  function resetIdleTimer() {
-    clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-      inConversation = false;
-      if (appState === 'wake') setStatus("Say «Hey Clauddy»...");
-    }, 30000); // 30s idle → back to wake-word mode
-  }
-
-  function afterSpeak() {
-    appState = 'wake';
-    if (inConversation) {
-      resetIdleTimer();
-      appState = 'command';
-      setTimeout(startCommand, 300);
-    } else {
-      startWake();
-    }
-  }
-
-  // ── DOM ──────────────────────────────────────────────────────────────────
+  // ── DOM ───────────────────────────────────────────────────────────────────
   const orbWrap  = document.getElementById("orb");
   const orbBtn   = document.getElementById("orb-btn");
   const btnMic   = document.getElementById("btn-mic");
@@ -239,114 +195,148 @@
   }, 1000);
 
   function setStatus(t) { statusEl.textContent = t; }
-  function setListeningUI(on) {
-    orbWrap.classList.toggle("listening", on);
-    btnMic.classList.toggle("active", on);
+
+  // ── Conversation mode ─────────────────────────────────────────────────────
+  function enterConversation() {
+    inConversation = true;
+    resetIdleTimer();
   }
-
-  // ── Speech Recognition ───────────────────────────────────────────────────
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { setStatus("Use Chrome for voice support"); }
-
-  function killRecog() {
-    if (!recog) return;
-    recog.onresult = recog.onend = recog.onerror = null;
-    try { recog.abort(); } catch(e) {}
-    recog = null;
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      inConversation = false;
+      if (appState === 'idle') setStatus("Tap to start");
+    }, 30000);
   }
-
-  function startWake() {
-    if (!SR || appState !== 'wake') return;
-    killRecog();
-    setListeningUI(false);
+  function afterSpeak() {
     orbWrap.classList.remove("speaking");
-    setStatus("Say «Hey Clauddy»...");
-
-    recog = new SR();
-    recog.lang = "en-US";
-    recog.continuous = true;
-    recog.interimResults = true;
-
-    recog.onresult = (e) => {
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript.toLowerCase();
-        if (t.includes("hey clauddy") || t.includes("hey clady") ||
-            t.includes("hey cloudy")  || t.includes("hey claudie") ||
-            t.includes("hey claude")  || t.includes("hey cloddy")) {
-          appState = 'command';
-          enterConversation();
-          killRecog();
-          setTimeout(startCommand, 250);
-          return;
-        }
-      }
-    };
-    recog.onend = () => {
-      if (appState === 'wake') setTimeout(startWake, 300);
-    };
-    recog.onerror = (e) => {
-      if (e.error === 'not-allowed') { setStatus("Mic access denied"); return; }
-      if (appState === 'wake') setTimeout(startWake, 1000);
-    };
-
-    try { recog.start(); } catch(e) { setTimeout(startWake, 1000); }
+    appState = 'idle';
+    if (inConversation) {
+      resetIdleTimer();
+      setTimeout(startRecording, 400);
+    } else {
+      setStatus("Tap to start");
+    }
   }
 
-  function startCommand() {
-    if (!SR) return;
-    killRecog();
-    setListeningUI(true);
+  // ── Recording ─────────────────────────────────────────────────────────────
+  async function startRecording() {
+    if (appState !== 'idle') return;
+
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {
+      setStatus("Mic access denied");
+      return;
+    }
+
+    appState     = 'recording';
+    audioChunks  = [];
+    enterConversation();
+
+    // Silence detection via AudioContext analyser
+    audioCtx        = new AudioContext();
+    const analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    audioCtx.createMediaStreamSource(micStream).connect(analyser);
+    const freqData  = new Uint8Array(analyser.frequencyBinCount);
+    let   silenceMs = 0;
+    let   lastTick  = performance.now();
+
+    function checkSilence() {
+      if (appState !== 'recording') return;
+      analyser.getByteFrequencyData(freqData);
+      const avg = freqData.reduce((a, b) => a + b, 0) / freqData.length;
+      const now = performance.now();
+      const dt  = now - lastTick;
+      lastTick  = now;
+
+      if (avg < 12) {
+        silenceMs += dt;
+        if (silenceMs >= 1800) { stopRecording(); return; }
+      } else {
+        silenceMs = 0;
+      }
+      rafId = requestAnimationFrame(checkSilence);
+    }
+    rafId = requestAnimationFrame(checkSilence);
+
+    // Pick a supported MIME type
+    const mime = ['audio/webm', 'audio/mp4', 'audio/ogg'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+    mediaRecorder = new MediaRecorder(micStream, mime ? { mimeType: mime } : {});
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = transcribe;
+    mediaRecorder.start();
+
+    orbWrap.classList.add("recording");
+    btnMic.classList.add("active");
     setStatus("Listening...");
+  }
 
-    recog = new SR();
-    recog.lang = "en-US";
-    recog.continuous = false;
-    recog.interimResults = false;
+  function stopRecording() {
+    if (appState !== 'recording') return;
+    cancelAnimationFrame(rafId);
+    appState = 'transcribing';
+    orbWrap.classList.remove("recording");
+    btnMic.classList.remove("active");
+    setStatus("Transcribing...");
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    micStream?.getTracks().forEach(t => t.stop());
+    audioCtx?.close();
+  }
 
-    recog.onresult = (e) => {
-      const text = e.results[0][0].transcript.trim();
-      setListeningUI(false);
-      if (!text) { appState = 'wake'; startWake(); return; }
+  // Manual stop/start toggle
+  function toggleMic() {
+    if (appState === 'recording')                    { stopRecording(); inConversation = false; return; }
+    if (appState === 'transcribing' || appState === 'thinking') return;
+    if (appState === 'speaking')                     { stopSpeaking(); }
+    startRecording();
+  }
+
+  // ── Whisper transcription ─────────────────────────────────────────────────
+  async function transcribe() {
+    if (!audioChunks.length) { appState = 'idle'; afterSpeak(); return; }
+
+    const mimeType = mediaRecorder.mimeType || 'audio/webm';
+    const ext      = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+    const blob     = new Blob(audioChunks, { type: mimeType });
+
+    const form = new FormData();
+    form.append('file', blob, `audio.${ext}`);
+    form.append('model', 'whisper-large-v3');
+    form.append('language', 'en');
+    form.append('response_format', 'json');
+
+    try {
+      const res  = await fetch(GROQ_STT_URL, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
+        body: form
+      });
+      const data = await res.json();
+      const text = data.text?.trim();
+      if (!text) { appState = 'idle'; if (inConversation) setTimeout(startRecording, 400); else setStatus("Tap to start"); return; }
       appendLog("YOU", text);
       respond(text);
-    };
-    recog.onend = () => {
-      setListeningUI(false);
-      if (appState === 'command') { appState = 'wake'; startWake(); }
-    };
-    recog.onerror = (e) => {
-      setListeningUI(false);
-      setStatus(e.error === 'not-allowed' ? "Mic access denied" : "Error: " + e.error);
-      appState = 'wake';
-      setTimeout(startWake, 1500);
-    };
-
-    try { recog.start(); } catch(e) { setStatus("Mic error: " + e.message); appState = 'wake'; setTimeout(startWake, 1500); }
+    } catch(e) {
+      setStatus("Transcription failed — tap to retry");
+      appState = 'idle';
+    }
   }
 
-  // Manual trigger
-  function triggerListen() {
-    if (appState === 'thinking') return;
-    if (speechSynthesis.speaking) speechSynthesis.cancel();
-    enterConversation();
-    appState = 'command';
-    killRecog();
-    setTimeout(startCommand, 100);
-  }
-
-  // ── Groq API ─────────────────────────────────────────────────────────────
+  // ── Groq chat ─────────────────────────────────────────────────────────────
   async function respond(userText) {
     appState = 'thinking';
     setStatus("Thinking...");
     history.push({ role: "user", content: userText });
     try {
-      const res = await fetch(GROQ_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+      const res  = await fetch(GROQ_CHAT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
         body: JSON.stringify({ model: MODEL, messages: history, stream: false })
       });
       const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content ?? "I lost my train of thought — try again?";
+      const reply = data.choices?.[0]?.message?.content ?? "I lost my train of thought — tap to try again.";
       history.push({ role: "assistant", content: reply });
       appendLog("CLAUDDY", reply);
       speak(reply);
@@ -355,41 +345,43 @@
     }
   }
 
-  // ── Speech Synthesis ─────────────────────────────────────────────────────
+  // ── Speech synthesis ──────────────────────────────────────────────────────
+  let currentUtterance = null;
+
   function speak(text) {
     appState = 'speaking';
-    if (muted) { appState = 'wake'; afterSpeak(); return; }
+    if (muted) { afterSpeak(); return; }
     setStatus("Speaking...");
     orbWrap.classList.add("speaking");
-
     speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text.replace(/[*_`#]/g, ""));
 
+    const utter = new SpeechSynthesisUtterance(text.replace(/[*_`#]/g, ""));
     const voices = speechSynthesis.getVoices();
-    const pick = voices.find(v => v.name.includes("Daniel") || v.name.includes("Google UK English Male") || v.name.includes("Arthur") || v.name.includes("Fred"))
+    const pick = voices.find(v => v.name.includes("Daniel") || v.name.includes("Google UK English Male") || v.name.includes("Arthur"))
                || voices.find(v => v.lang.startsWith("en"));
     if (pick) utter.voice = pick;
     utter.rate = 0.97;
     utter.pitch = 0.85;
+    currentUtterance = utter;
 
-    let finished = false;
-    const done = () => {
-      if (finished) return;
-      finished = true;
-      orbWrap.classList.remove("speaking");
-      afterSpeak();
-    };
-
-    utter.onend = done;
-    utter.onerror = done;
-    // Fallback: Chrome sometimes never fires onend
-    const ms = Math.max(5000, text.split(" ").length * 450);
-    setTimeout(done, ms);
+    let done = false;
+    const finish = () => { if (done) return; done = true; currentUtterance = null; afterSpeak(); };
+    utter.onend  = finish;
+    utter.onerror = finish;
+    // Fallback: Chrome/iOS sometimes never fires onend
+    setTimeout(finish, Math.max(5000, text.split(" ").length * 500));
 
     speechSynthesis.speak(utter);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  function stopSpeaking() {
+    speechSynthesis.cancel();
+    orbWrap.classList.remove("speaking");
+    currentUtterance = null;
+    appState = 'idle';
+  }
+
+  // ── Log ───────────────────────────────────────────────────────────────────
   function appendLog(who, text) {
     const entry = document.createElement("div");
     entry.className = "log-entry";
@@ -399,8 +391,8 @@
   }
 
   // ── Controls ──────────────────────────────────────────────────────────────
-  orbBtn.addEventListener("click", triggerListen);
-  btnMic.addEventListener("click", triggerListen);
+  orbBtn.addEventListener("click", toggleMic);
+  btnMic.addEventListener("click", toggleMic);
   btnMute.addEventListener("click", () => {
     muted = !muted;
     btnMute.textContent = muted ? "🔇" : "🔊";
@@ -409,22 +401,16 @@
   btnClear.addEventListener("click", () => {
     log.innerHTML = "";
     history = [{ role: "system", content: SYSTEM_PROMPT }];
-    setStatus("Fresh start");
-    setTimeout(() => { if (appState === 'wake') setStatus("Say «Hey Clauddy»..."); }, 1500);
+    inConversation = false;
+    clearTimeout(idleTimer);
+    setStatus("Tap to start");
   });
   document.addEventListener("keydown", e => {
-    if (e.code === "Space" && e.target === document.body) { e.preventDefault(); triggerListen(); }
+    if (e.code === "Space" && e.target === document.body) { e.preventDefault(); toggleMic(); }
   });
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
   speechSynthesis.getVoices();
-
-  setTimeout(() => {
-    const greeting = "Hey, I'm Clauddy. Say hey Clauddy whenever you need me.";
-    appendLog("CLAUDDY", greeting);
-    speak(greeting);
-  }, 700);
 </script>
 </body>
 </html>
