@@ -193,10 +193,36 @@
 
   // ── State ────────────────────────────────────────────────────────────────
   // states: 'wake' | 'command' | 'thinking' | 'speaking'
-  let appState = 'wake';
+  let appState      = 'wake';
+  let inConversation = false;   // true after wake word — auto-listens after each reply
+  let idleTimer     = null;     // resets to wake mode after 30s silence
   let history  = [{ role: "system", content: SYSTEM_PROMPT }];
   let muted    = false;
   let recog    = null;
+
+  function enterConversation() {
+    inConversation = true;
+    resetIdleTimer();
+  }
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      inConversation = false;
+      if (appState === 'wake') setStatus("Say «Hey Clauddy»...");
+    }, 30000); // 30s idle → back to wake-word mode
+  }
+
+  function afterSpeak() {
+    appState = 'wake';
+    if (inConversation) {
+      resetIdleTimer();
+      appState = 'command';
+      setTimeout(startCommand, 300);
+    } else {
+      startWake();
+    }
+  }
 
   // ── DOM ──────────────────────────────────────────────────────────────────
   const orbWrap  = document.getElementById("orb");
@@ -248,6 +274,7 @@
             t.includes("hey cloudy")  || t.includes("hey claudie") ||
             t.includes("hey claude")  || t.includes("hey cloddy")) {
           appState = 'command';
+          enterConversation();
           killRecog();
           setTimeout(startCommand, 250);
           return;
@@ -301,6 +328,7 @@
   function triggerListen() {
     if (appState === 'thinking') return;
     if (speechSynthesis.speaking) speechSynthesis.cancel();
+    enterConversation();
     appState = 'command';
     killRecog();
     setTimeout(startCommand, 100);
@@ -330,7 +358,7 @@
   // ── Speech Synthesis ─────────────────────────────────────────────────────
   function speak(text) {
     appState = 'speaking';
-    if (muted) { appState = 'wake'; startWake(); return; }
+    if (muted) { appState = 'wake'; afterSpeak(); return; }
     setStatus("Speaking...");
     orbWrap.classList.add("speaking");
 
@@ -349,8 +377,7 @@
       if (finished) return;
       finished = true;
       orbWrap.classList.remove("speaking");
-      appState = 'wake';
-      startWake();
+      afterSpeak();
     };
 
     utter.onend = done;
