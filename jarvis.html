@@ -201,10 +201,10 @@
             t.includes("hey cloudy")  || t.includes("hey claudie") ||
             t.includes("hey claude")  || t.includes("hey cloddy")) {
           wakeRecog.onresult = wakeRecog.onend = wakeRecog.onerror = null;
-          try { wakeRecog.abort(); } catch(e2) {}
+          try { wakeRecog.stop(); } catch(e2) {}
           appState = 'idle';
           enterConversation();
-          setTimeout(startRecording, 250);
+          setTimeout(startRecording, 600); // longer delay so mic releases fully
           return;
         }
       }
@@ -410,11 +410,18 @@
 
     const utter = new SpeechSynthesisUtterance(text.replace(/[*_`#]/g, ""));
     const voices = speechSynthesis.getVoices();
-    const pick = voices.find(v => v.name.includes("Daniel") || v.name.includes("Google UK English Male") || v.name.includes("Arthur"))
-               || voices.find(v => v.lang.startsWith("en"));
+    const pick =
+      voices.find(v => v.name === "Google UK English Male") ||
+      voices.find(v => v.name === "Daniel") ||
+      voices.find(v => v.name === "Alex") ||
+      voices.find(v => v.name === "Fred") ||
+      voices.find(v => v.name === "Arthur") ||
+      voices.find(v => v.name.toLowerCase().includes("male") && v.lang.startsWith("en")) ||
+      voices.find(v => v.lang.startsWith("en-GB")) ||
+      voices.find(v => v.lang.startsWith("en"));
     if (pick) utter.voice = pick;
-    utter.rate = 0.97;
-    utter.pitch = 0.85;
+    utter.rate = 0.93;
+    utter.pitch = 0.75;
 
     let done = false;
     const finish = () => { if (done) return; done = true; afterSpeak(); };
