@@ -149,7 +149,7 @@
   <button class="btn-small" id="btn-clear" title="Clear chat">🗑️</button>
 </div>
 
-<p class="hint">Tap the orb to talk — auto-listens during conversation</p>
+<p class="hint" id="hint">Say «Hey Clauddy» or tap the orb to talk</p>
 
 <script>
   // ── API Key ───────────────────────────────────────────────────────────────
@@ -174,7 +174,7 @@
   const EL_URL      = `https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE_ID}`;
 
   // ── State ─────────────────────────────────────────────────────────────────
-  // 'idle' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
+  // 'idle' | 'wake' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
   let appState       = 'idle';
   let inConversation = false;
   let idleTimer      = null;
@@ -186,8 +186,53 @@
   let audioChunks    = [];
   let micStream      = null;
   let audioCtx       = null;
-  let silenceTimer   = null;
   let rafId          = null;
+
+  // ── Wake word (desktop Chrome only) ──────────────────────────────────────
+  const SR      = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const hasWake = !!SR;
+  let wakeRecog = null;
+
+  function startWake() {
+    if (!hasWake || appState !== 'idle') return;
+    appState = 'wake';
+    setStatus("Say «Hey Clauddy»...");
+    if (wakeRecog) { try { wakeRecog.abort(); } catch(e) {} }
+    wakeRecog = new SR();
+    wakeRecog.lang = "en-US";
+    wakeRecog.continuous = true;
+    wakeRecog.interimResults = true;
+    wakeRecog.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript.toLowerCase();
+        if (t.includes("hey clauddy") || t.includes("hey clady") ||
+            t.includes("hey cloudy")  || t.includes("hey claudie") ||
+            t.includes("hey claude")  || t.includes("hey cloddy")) {
+          wakeRecog.onresult = wakeRecog.onend = wakeRecog.onerror = null;
+          try { wakeRecog.abort(); } catch(e2) {}
+          appState = 'idle';
+          enterConversation();
+          setTimeout(startRecording, 250);
+          return;
+        }
+      }
+    };
+    wakeRecog.onend = () => { if (appState === 'wake') startWake(); };
+    wakeRecog.onerror = (e) => {
+      if (e.error === 'not-allowed') { setStatus("Mic access denied"); return; }
+      if (appState === 'wake') setTimeout(startWake, 1000);
+    };
+    try { wakeRecog.start(); } catch(e) { setTimeout(startWake, 1000); }
+  }
+
+  function stopWake() {
+    if (wakeRecog) {
+      wakeRecog.onresult = wakeRecog.onend = wakeRecog.onerror = null;
+      try { wakeRecog.abort(); } catch(e) {}
+      wakeRecog = null;
+    }
+    if (appState === 'wake') appState = 'idle';
+  }
 
   // ── DOM ───────────────────────────────────────────────────────────────────
   const orbWrap  = document.getElementById("orb");
@@ -223,6 +268,8 @@
     if (inConversation) {
       resetIdleTimer();
       setTimeout(startRecording, 400);
+    } else if (hasWake) {
+      startWake();
     } else {
       setStatus("Tap to start");
     }
@@ -296,9 +343,11 @@
 
   // Manual stop/start toggle
   function toggleMic() {
-    if (appState === 'recording')                    { stopRecording(); inConversation = false; return; }
+    if (appState === 'recording')                      { stopRecording(); inConversation = false; return; }
     if (appState === 'transcribing' || appState === 'thinking') return;
-    if (appState === 'speaking')                     { stopSpeaking(); }
+    if (appState === 'speaking')                       { stopSpeaking(); }
+    stopWake();
+    enterConversation();
     startRecording();
   }
 
@@ -427,7 +476,7 @@
     history = [{ role: "system", content: SYSTEM_PROMPT }];
     inConversation = false;
     clearTimeout(idleTimer);
-    setStatus("Tap to start");
+    if (hasWake) startWake(); else setStatus("Tap to start");
   });
   document.addEventListener("keydown", e => {
     if (e.code === "Space" && e.target === document.body) { e.preventDefault(); toggleMic(); }
@@ -435,6 +484,9 @@
 
   speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
   speechSynthesis.getVoices();
+
+  // Boot into wake mode (desktop) or idle (iOS)
+  setTimeout(() => { if (hasWake) startWake(); else setStatus("Tap to start"); }, 500);
 </script>
 </body>
 </html>
