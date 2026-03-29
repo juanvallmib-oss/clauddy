@@ -149,7 +149,7 @@
   <button class="btn-small" id="btn-clear" title="Clear chat">🗑️</button>
 </div>
 
-<p class="hint" id="hint">Say «Hey Clauddy» or tap the orb to talk</p>
+<p class="hint" id="hint">Say «Hey Ye» or tap the orb to talk</p>
 
 <script>
   // ── API Key ───────────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@
   function startWake() {
     if (!hasWake || appState !== 'idle') return;
     appState = 'wake';
-    setStatus("Say «Hey Clauddy»...");
+    setStatus("Say «Hey Ye»...");
     if (wakeRecog) { try { wakeRecog.abort(); } catch(e) {} }
     wakeRecog = new SR();
     wakeRecog.lang = "en-US";
@@ -197,9 +197,9 @@
     wakeRecog.onresult = (e) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript.toLowerCase();
-        if (t.includes("hey clauddy") || t.includes("hey clady") ||
-            t.includes("hey cloudy")  || t.includes("hey claudie") ||
-            t.includes("hey claude")  || t.includes("hey cloddy")) {
+        if (t.includes("hey ye") || t.includes("hey yay") ||
+            t.includes("hey yea") || t.includes("hey yeah") ||
+            t.includes("hey yae") || t.includes("hey yay")) {
           wakeRecog.onresult = wakeRecog.onend = wakeRecog.onerror = null;
           try { wakeRecog.stop(); } catch(e2) {}
           appState = 'idle';
