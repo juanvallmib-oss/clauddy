@@ -164,15 +164,6 @@
   const MODEL          = "llama-3.3-70b-versatile";
   const SYSTEM_PROMPT  = `You are Clauddy, a highly intelligent personal AI assistant. You are witty, dry, and subtly sarcastic — but always helpful and loyal. Keep responses concise (1-4 sentences) since this is a voice interface. No bullet points or markdown. Speak naturally as if talking out loud.`;
 
-  // ElevenLabs TTS
-  let EL_KEY = localStorage.getItem("el_api_key") || "";
-  // Re-prompt if key doesn't look valid (must start with sk_)
-  if (!EL_KEY.startsWith("sk_")) {
-    EL_KEY = (prompt("Enter your ElevenLabs API key (starts with sk_):") || "").trim();
-    if (EL_KEY) localStorage.setItem("el_api_key", EL_KEY);
-  }
-  const EL_VOICE_ID = "onwK4e9ZLuTAKqWW03F9"; // Daniel — British male, natural
-  const EL_URL      = `https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE_ID}`;
 
   // ── State ─────────────────────────────────────────────────────────────────
   // 'idle' | 'wake' | 'recording' | 'transcribing' | 'thinking' | 'speaking'
@@ -409,53 +400,31 @@
     }
   }
 
-  // ── ElevenLabs TTS ────────────────────────────────────────────────────────
-  let currentAudio = null;
-
-  async function speak(text) {
+  // ── Speech Synthesis ─────────────────────────────────────────────────────
+  function speak(text) {
     appState = 'speaking';
     if (muted) { afterSpeak(); return; }
     setStatus("Speaking...");
     orbWrap.classList.add("speaking");
+    speechSynthesis.cancel();
 
-    const clean = text.replace(/[*_`#]/g, "");
+    const utter = new SpeechSynthesisUtterance(text.replace(/[*_`#]/g, ""));
+    const voices = speechSynthesis.getVoices();
+    const pick = voices.find(v => v.name.includes("Daniel") || v.name.includes("Google UK English Male") || v.name.includes("Arthur"))
+               || voices.find(v => v.lang.startsWith("en"));
+    if (pick) utter.voice = pick;
+    utter.rate = 0.97;
+    utter.pitch = 0.85;
 
-    try {
-      const res = await fetch(EL_URL, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': EL_KEY,
-          'Content-Type': 'application/json',
-          'Accept': 'audio/mpeg'
-        },
-        body: JSON.stringify({
-          text: clean,
-          model_id: 'eleven_turbo_v2_5',
-          voice_settings: { stability: 0.45, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true }
-        })
-      });
-
-      if (!res.ok) throw new Error("ElevenLabs error " + res.status);
-
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      currentAudio = new Audio(url);
-      currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; afterSpeak(); };
-      currentAudio.onerror = () => { URL.revokeObjectURL(url); currentAudio = null; afterSpeak(); };
-      await currentAudio.play();
-    } catch(e) {
-      // Fallback to speechSynthesis if ElevenLabs fails
-      console.warn("ElevenLabs failed, falling back:", e);
-      const utter = new SpeechSynthesisUtterance(clean);
-      utter.onend = utter.onerror = afterSpeak;
-      setTimeout(afterSpeak, Math.max(5000, clean.split(" ").length * 500));
-      speechSynthesis.speak(utter);
-    }
+    let done = false;
+    const finish = () => { if (done) return; done = true; afterSpeak(); };
+    utter.onend = utter.onerror = finish;
+    setTimeout(finish, Math.max(5000, text.split(" ").length * 500));
+    speechSynthesis.speak(utter);
   }
 
   function stopSpeaking() {
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-    else speechSynthesis.cancel();
+    speechSynthesis.cancel();
     orbWrap.classList.remove("speaking");
     appState = 'idle';
   }
