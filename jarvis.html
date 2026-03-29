@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clauddy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --muted: #555;
+      --accent: #5b6af0;
+      --accent-light: rgba(91,106,240,.12);
+      --accent-glow: rgba(91,106,240,.25);
+      --orb-glow: rgba(91,106,240,.3);
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ── Soft blobs in background ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      opacity: .4;
+    }
+    .blob-1 { width: 400px; height: 400px; background: #1a1d5e; top: -120px; left: -100px; }
+    .blob-2 { width: 350px; height: 350px; background: #12154a; bottom: -80px; right: -60px; }
+
+    /* ── Header ── */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 12px var(--orb-glow);
+    }
+    .logo h1 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -.01em;
+    }
+    #clock {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── Orb ── */
+    .orb-wrap {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin-bottom: 40px;
+    }
+
+    /* Floating rings */
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid transparent;
+    }
+    .ring-1 {
+      inset: -16px;
+      border-top-color: rgba(91,106,240,.25);
+      border-right-color: rgba(91,106,240,.25);
+      animation: spin 6s linear infinite;
+    }
+    .ring-2 {
+      inset: -30px;
+      border-bottom-color: rgba(91,106,240,.15);
+      border-left-color: rgba(91,106,240,.15);
+      animation: spin 10s linear infinite reverse;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .orb {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 32%, #8b97f8, #5b6af0 55%, #3d4de0);
+      box-shadow:
+        0 0 0 8px rgba(91,106,240,.1),
+        0 8px 32px rgba(91,106,240,.35),
+        0 20px 60px rgba(91,106,240,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      font-size: 52px;
+      user-select: none;
+    }
+    .orb:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 0 12px rgba(91,106,240,.15), 0 12px 40px rgba(91,106,240,.5);
+    }
+
+    .orb-wrap.listening .orb {
+      animation: pulse-listen .8s ease-in-out infinite;
+    }
+    .orb-wrap.speaking .orb {
+      animation: pulse-speak .5s ease-in-out infinite;
+    }
+    @keyframes pulse-listen {
+      0%,100% { transform: scale(1);    box-shadow: 0 0 0 8px rgba(91,106,240,.1), 0 8px 32px rgba(91,106,240,.35); }
+      50%      { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(91,106,240,.2), 0 12px 50px rgba(91,106,240,.55); }
+    }
+    @keyframes pulse-speak {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.08); }
+    }
+
+    /* Bouncing dots below orb */
+    .wave {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+      align-items: flex-end;
+    }
+    .wave span {
+      display: block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: .3;
+    }
+    .orb-wrap.listening .wave span,
+    .orb-wrap.speaking .wave span {
+      opacity: 1;
+      animation: bounce .6s ease-in-out infinite;
+    }
+    .wave span:nth-child(1) { animation-delay: 0s; }
+    .wave span:nth-child(2) { animation-delay: .12s; }
+    .wave span:nth-child(3) { animation-delay: .24s; }
+    .wave span:nth-child(4) { animation-delay: .12s; }
+    .wave span:nth-child(5) { animation-delay: 0s; }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    /* ── Status pill ── */
+    #status {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1.5px solid rgba(91,106,240,.15);
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Chat log ── */
+    #transcript-box {
+      width: min(520px, 92vw);
+      max-height: 200px;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+      scrollbar-width: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,.05);
+    }
+    #transcript-box::-webkit-scrollbar { display: none; }
+
+    #log { display: flex; flex-direction: column; gap: 10px; }
+    .log-entry { display: flex; flex-direction: column; gap: 3px; }
+    .log-entry .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+    .log-entry .you {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .log-entry .clauddy {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .btn-main {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px var(--orb-glow);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-main:hover { transform: scale(1.07); box-shadow: 0 8px 28px var(--orb-glow); }
+    .btn-main.active {
+      background: #e05555;
+      box-shadow: 0 6px 20px rgba(224,85,85,.4);
+    }
+
+    .btn-small {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, color .15s, transform .15s;
+    }
+    .btn-small:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.05); }
+
+    /* ── Hint ── */
+    .hint {
+      position: fixed;
+      bottom: 22px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">☀️</div>
+    <h1>Clauddy</h1>
+  </div>
+  <span id="clock">--:--:--</span>
+</header>
+
+<div class="orb-wrap" id="orb">
+  <div class="ring ring-1"></div>
+  <div class="ring ring-2"></div>
+  <div class="orb" id="orb-btn" title="Click to speak">
+    <svg id="orb-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+    </svg>
+  </div>
+  <div class="wave">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+</div>
+
+<div id="status">Ready</div>
+
+<div id="transcript-box">
+  <div id="log"></div>
+</div>
+
+<div class="controls">
+  <button class="btn-small" id="btn-mute" title="Mute voice">🔊</button>
+  <button class="btn-main" id="btn-mic" title="Click to speak">🎙️</button>
+  <button class="btn-small" id="btn-clear" title="Clear chat">🗑️</button>
+</div>
+
+<p class="hint">Say «Hey Clauddy» to wake — or click the orb / press Space</p>
+
+<script>
+  let GROQ_KEY = localStorage.getItem("groq_api_key");
+  if (!GROQ_KEY) {
+    GROQ_KEY = prompt("Enter your Groq API key (get one free at console.groq.com):");
+    if (GROQ_KEY) localStorage.setItem("groq_api_key", GROQ_KEY.trim());
+    GROQ_KEY = GROQ_KEY?.trim() || "";
+  }
+  const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+  const MODEL    = "llama-3.3-70b-versatile";
+
+  const SYSTEM_PROMPT = `You are Clauddy, a highly intelligent personal AI assistant. You are witty, dry, and subtly sarcastic — but always helpful and loyal. You speak with quiet confidence and precision. You occasionally comment on the wisdom of a request, but you never refuse to help. Keep responses concise (1-4 sentences) since this is a voice interface. No bullet points or markdown. Speak naturally as if talking out loud.`;
+
+  const FACES = {};
+
+  let history = [{ role: "system", content: SYSTEM_PROMPT }];
+  let muted = false;
+  let busy = false;
+  let currentUtterance = null;
+
+  const orbWrap  = document.getElementById("orb");
+  const orbBtn   = document.getElementById("orb-btn");
+  const btnMic   = document.getElementById("btn-mic");
+  const btnMute  = document.getElementById("btn-mute");
+  const btnClear = document.getElementById("btn-clear");
+  const statusEl = document.getElementById("status");
+  const log      = document.getElementById("log");
+
+  // Clock
+  setInterval(() => {
+    document.getElementById("clock").textContent =
+      new Date().toLocaleTimeString("en-US", { hour12: true });
+  }, 1000);
+
+  function setStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  // Speech Recognition
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) setStatus("Use Chrome for voice support 😅", "error");
+  const recog = SR ? new SR() : null;
+  if (recog) { recog.lang = "en-US"; recog.continuous = false; recog.interimResults = false; }
+
+  // Wake word recognizer — always-on, listens for "hey clauddy"
+  const wakeRecog = SR ? new SR() : null;
+  if (wakeRecog) { wakeRecog.lang = "en-US"; wakeRecog.continuous = true; wakeRecog.interimResults = true; }
+
+  let wakeActive = false;
+
+  function startWakeListener() {
+    if (!wakeRecog || busy || wakeActive) return;
+    try { wakeActive = true; wakeRecog.start(); setStatus("Say «Hey Clauddy»..."); } catch(e) {}
+  }
+
+  function stopWakeListener() {
+    if (!wakeRecog || !wakeActive) return;
+    wakeActive = false;
+    try { wakeRecog.stop(); } catch(e) {}
+  }
+
+  wakeRecog && wakeRecog.addEventListener("result", e => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript.toLowerCase();
+      // Accept common mishearings too
+      if (t.includes("hey clauddy") || t.includes("hey clady") ||
+          t.includes("hey cloudy") || t.includes("hey claudie") ||
+          t.includes("hey cloddy") || t.includes("hey claude")) {
+        stopWakeListener();
+        startListening();
+        break;
+      }
+    }
+  });
+
+  wakeRecog && wakeRecog.addEventListener("end", () => {
+    wakeActive = false;
+    if (!busy) startWakeListener();
+  });
+
+  wakeRecog && wakeRecog.addEventListener("error", () => {
+    wakeActive = false;
+    if (!busy) setTimeout(startWakeListener, 1000);
+  });
+
+  function startListening() {
+    if (!recog || busy) return;
+    stopWakeListener();
+    if (currentUtterance) { speechSynthesis.cancel(); currentUtterance = null; }
+    orbWrap.classList.add("listening");
+    btnMic.classList.add("active");
+    setStatus("Listening...");
+    recog.start();
+  }
+
+  recog && recog.addEventListener("result", async e => {
+    const text = e.results[0][0].transcript.trim();
+    orbWrap.classList.remove("listening");
+    btnMic.classList.remove("active");
+    if (!text) { startWakeListener(); return; }
+    appendLog("YOU", text);
+    await respond(text);
+  });
+
+  recog && recog.addEventListener("end", () => {
+    orbWrap.classList.remove("listening");
+    btnMic.classList.remove("active");
+    if (!busy) startWakeListener();
+  });
+
+  recog && recog.addEventListener("error", e => {
+    orbWrap.classList.remove("listening");
+    btnMic.classList.remove("active");
+    setStatus(e.error === "not-allowed" ? "Mic access denied" : "Try again");
+    busy = false;
+    setTimeout(startWakeListener, 1500);
+  });
+
+  async function respond(userText) {
+    busy = true;
+    setStatus("Thinking...");
+    history.push({ role: "user", content: userText });
+
+    try {
+      const res = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+        body: JSON.stringify({ model: MODEL, messages: history, stream: false })
+      });
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content ?? "Hmm, I lost my train of thought! Try again?";
+      history.push({ role: "assistant", content: reply });
+      appendLog("CLAUDDY", reply);
+      speak(reply);
+    } catch {
+      const fallback = "Oh no, I can't reach my brain right now! Check the connection?";
+      appendLog("CLAUDDY", fallback);
+      speak(fallback);
+    }
+  }
+
+  function speak(text) {
+    if (muted) { busy = false; setStatus("Ready"); return; }
+    setStatus("Speaking...");
+    orbWrap.classList.add("speaking");
+
+    const utter = new SpeechSynthesisUtterance(text.replace(/[*_`#]/g, ""));
+    currentUtterance = utter;
+
+    const voices = speechSynthesis.getVoices();
+    const pick = voices.find(v => v.name.includes("Daniel") || v.name.includes("Google UK English Male") || v.name.includes("Fred") || v.name.includes("Alex") || v.name.includes("Arthur"))
+               || voices.find(v => v.lang.startsWith("en") && v.name.toLowerCase().includes("male"))
+               || voices.find(v => v.lang.startsWith("en"))
+               || voices[0];
+    if (pick) utter.voice = pick;
+    utter.rate = 0.97;
+    utter.pitch = 0.85;
+
+    utter.onend = utter.onerror = () => {
+      orbWrap.classList.remove("speaking");
+      currentUtterance = null;
+      busy = false;
+      startWakeListener();
+    };
+    speechSynthesis.speak(utter);
+  }
+
+  function appendLog(who, text) {
+    const entry = document.createElement("div");
+    entry.className = "log-entry";
+    entry.innerHTML = `<span class="label">${who}</span><span class="${who === "YOU" ? "you" : "clauddy"}">${text}</span>`;
+    log.appendChild(entry);
+    document.getElementById("transcript-box").scrollTop = 99999;
+  }
+
+  orbBtn.addEventListener("click", startListening);
+  btnMic.addEventListener("click", startListening);
+  btnMute.addEventListener("click", () => {
+    muted = !muted;
+    btnMute.textContent = muted ? "🔇" : "🔊";
+    if (muted && speechSynthesis.speaking) speechSynthesis.cancel();
+  });
+  btnClear.addEventListener("click", () => {
+    log.innerHTML = "";
+    history = [{ role: "system", content: SYSTEM_PROMPT }];
+    setStatus("Fresh start");
+    setTimeout(() => setStatus("Ready"), 1500);
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space" && e.target === document.body) { e.preventDefault(); startListening(); }
+  });
+
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  speechSynthesis.getVoices();
+
+  setTimeout(() => {
+    const greeting = "Hey, I'm Clauddy. Say hey Clauddy whenever you need me.";
+    appendLog("CLAUDDY", greeting);
+    speak(greeting);
+    // speak() will call startWakeListener() when it ends
+  }, 700);
+</script>
+</body>
+</html>

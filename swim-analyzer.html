@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swim Analyzer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0e1a; --surface: #111827; --surface2: #1f2937;
+    --accent: #3b82f6; --accent2: #06b6d4; --text: #f1f5f9; --muted: #94a3b8;
+    --radius: 12px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; }
+
+  header { padding: 2rem; text-align: center; border-bottom: 1px solid #1f2937; }
+  header h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header p { color: var(--muted); margin-top: .4rem; font-size: .95rem; }
+
+  main { max-width: 960px; margin: 0 auto; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; border: 1px solid #1f2937; }
+  .card h2 { font-size: 1rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; }
+
+  /* Upload */
+  #drop-zone { border: 2px dashed #374151; border-radius: var(--radius); padding: 3rem; text-align: center; cursor: pointer; transition: .2s; }
+  #drop-zone:hover, #drop-zone.over { border-color: var(--accent); background: #1e3a5f22; }
+  #drop-zone .icon { font-size: 3rem; margin-bottom: .5rem; }
+  #drop-zone p { color: var(--muted); font-size: .9rem; }
+  #drop-zone strong { color: var(--text); }
+  #file-input { display: none; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+  label { display: flex; flex-direction: column; gap: .4rem; font-size: .85rem; color: var(--muted); }
+  select, input[type=number] { background: var(--surface2); border: 1px solid #374151; color: var(--text); padding: .6rem .8rem; border-radius: 8px; font-size: .95rem; outline: none; }
+  select:focus, input:focus { border-color: var(--accent); }
+
+  /* Video + Canvas */
+  #video-section { display: none; }
+  .video-wrap { position: relative; display: inline-block; width: 100%; background: #000; border-radius: var(--radius); overflow: hidden; }
+  #video-el { width: 100%; display: block; max-height: 480px; object-fit: contain; }
+  #canvas-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; }
+  .hint { font-size: .82rem; color: var(--muted); margin-top: .6rem; text-align: center; }
+
+  /* Button */
+  .btn { padding: .8rem 2rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: .2s; }
+  .btn:hover { opacity: .88; transform: scale(1.02); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-wrap { display: flex; justify-content: center; margin-top: 1rem; }
+
+  /* Progress */
+  #progress-section { display: none; }
+  .progress-bar-wrap { background: var(--surface2); border-radius: 999px; height: 8px; overflow: hidden; margin-top: .5rem; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 0%; transition: width .3s; border-radius: 999px; }
+  #progress-label { font-size: .85rem; color: var(--muted); margin-top: .4rem; }
+
+  /* Results */
+  #results-section { display: none; }
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+  .result-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; text-align: center; border: 1px solid #374151; }
+  .result-card .val { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .result-card .lbl { font-size: .8rem; color: var(--muted); margin-top: .3rem; }
+
+  #stroke-chart-wrap { margin-top: 1.5rem; }
+  #stroke-chart { width: 100%; height: 120px; border-radius: 8px; background: var(--surface2); }
+
+  .badge { display: inline-block; padding: .2rem .7rem; border-radius: 999px; font-size: .75rem; font-weight: 600; background: #1e3a5f; color: var(--accent2); margin-left: .4rem; }
+
+  #reset-btn { margin-top: 1rem; background: var(--surface2); color: var(--muted); border: 1px solid #374151; border-radius: 999px; padding: .6rem 1.5rem; cursor: pointer; font-size: .9rem; }
+  #reset-btn:hover { color: var(--text); border-color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Swim Analyzer</h1>
+  <p>Upload your swim video — get stroke count, speed, and stroke rate automatically.</p>
+</header>
+
+<main>
+
+  <!-- Step 1: Upload -->
+  <div class="card" id="upload-card">
+    <h2>1 — Upload Video</h2>
+    <div id="drop-zone">
+      <div class="icon">🎬</div>
+      <strong>Drop your video here</strong>
+      <p>or click the button below</p>
+    </div>
+    <input type="file" id="file-input" accept="video/*" style="display:none">
+    <div style="text-align:center;margin-top:1rem">
+      <button class="btn" onclick="document.getElementById('file-input').click()">Choose Video File</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Swim Details -->
+  <div class="card">
+    <h2>2 — Swim Details</h2>
+    <div class="form-grid">
+      <label>Distance (metres)
+        <input type="number" id="distance" value="100" min="25" step="25">
+      </label>
+      <label>Stroke
+        <select id="stroke">
+          <option value="freestyle">Freestyle</option>
+          <option value="backstroke">Backstroke</option>
+          <option value="breaststroke">Breaststroke</option>
+          <option value="butterfly">Butterfly</option>
+        </select>
+      </label>
+      <label>Pool Type
+        <select id="course">
+          <option value="LCM">Long Course (50m)</option>
+          <option value="SCM">Short Course (25m)</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- Step 3: Select yourself -->
+  <div class="card" id="video-section">
+    <h2>3 — Select Yourself in the Video</h2>
+    <div class="video-wrap">
+      <video id="video-el" controls></video>
+      <canvas id="canvas-overlay"></canvas>
+    </div>
+    <p class="hint">⬆ Pause the video at a good frame, then drag a box around yourself. You can redo it anytime.</p>
+    <div id="selection-status" style="text-align:center;margin-top:.5rem;font-size:.85rem;color:var(--muted)">No selection yet</div>
+    <div class="btn-wrap">
+      <button class="btn" id="analyze-btn" disabled>Analyze Swim</button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card" id="progress-section">
+    <h2>Analyzing...</h2>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <p id="progress-label">Starting...</p>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="results-section">
+    <h2>Results <span id="result-badge" class="badge"></span></h2>
+    <div class="results-grid">
+      <div class="result-card"><div class="val" id="res-speed">—</div><div class="lbl">Speed (m/s)</div></div>
+      <div class="result-card"><div class="val" id="res-pace">—</div><div class="lbl">Pace (min/100m)</div></div>
+      <div class="result-card"><div class="val" id="res-strokes">—</div><div class="lbl">Total Strokes</div></div>
+      <div class="result-card"><div class="val" id="res-spm">—</div><div class="lbl">Strokes / min</div></div>
+      <div class="result-card"><div class="val" id="res-spl">—</div><div class="lbl">Strokes / length</div></div>
+      <div class="result-card"><div class="val" id="res-duration">—</div><div class="lbl">Swim Time</div></div>
+    </div>
+    <div id="stroke-chart-wrap">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:.5rem">Stroke motion signal (peaks = strokes)</p>
+      <canvas id="stroke-chart"></canvas>
+    </div>
+    <div style="text-align:center"><button id="reset-btn">Analyze another video</button></div>
+  </div>
+
+</main>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let videoFile = null;
+let roi = null; // {x, y, w, h} in video coords
+let drawing = false, startX, startY;
+
+// ── Upload ─────────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const videoEl  = document.getElementById('video-el');
+
+// click handled natively by label[for]
+dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('over'); };
+dropZone.ondragleave = () => dropZone.classList.remove('over');
+dropZone.ondrop = e => { e.preventDefault(); dropZone.classList.remove('over'); loadFile(e.dataTransfer.files[0]); };
+fileInput.onchange = () => loadFile(fileInput.files[0]);
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('video/')) return;
+  videoFile = file;
+  const url = URL.createObjectURL(file);
+  videoEl.src = url;
+  videoEl.load();
+  document.getElementById('video-section').style.display = '';
+  document.getElementById('upload-card').style.border = '1px solid var(--accent)';
+  setupCanvas();
+}
+
+// ── Canvas ROI selection ────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas-overlay');
+const ctx = canvas.getContext('2d');
+
+function setupCanvas() {
+  videoEl.onloadedmetadata = () => syncCanvas();
+  videoEl.onresize = syncCanvas;
+  new ResizeObserver(syncCanvas).observe(videoEl);
+}
+
+function syncCanvas() {
+  canvas.width = videoEl.clientWidth;
+  canvas.height = videoEl.clientHeight;
+}
+
+function videoCoords(cx, cy) {
+  // Map canvas px → video px
+  const scaleX = videoEl.videoWidth / videoEl.clientWidth;
+  const scaleY = videoEl.videoHeight / videoEl.clientHeight;
+  return { x: cx * scaleX, y: cy * scaleY };
+}
+
+canvas.addEventListener('mousedown', e => {
+  const r = canvas.getBoundingClientRect();
+  startX = e.clientX - r.left;
+  startY = e.clientY - r.top;
+  drawing = true;
+  roi = null;
+  document.getElementById('analyze-btn').disabled = true;
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!drawing) return;
+  const r = canvas.getBoundingClientRect();
+  const cx = e.clientX - r.left;
+  const cy = e.clientY - r.top;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const x = Math.min(startX, cx), y = Math.min(startY, cy);
+  const w = Math.abs(cx - startX), h = Math.abs(cy - startY);
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 3]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = 'rgba(59,130,246,0.12)';
+  ctx.fillRect(x, y, w, h);
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (!drawing) return;
+  drawing = false;
+  const r = canvas.getBoundingClientRect();
+  const cx = e.clientX - r.left;
+  const cy = e.clientY - r.top;
+  const x = Math.min(startX, cx), y = Math.min(startY, cy);
+  const w = Math.abs(cx - startX), h = Math.abs(cy - startY);
+  if (w < 10 || h < 10) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+
+  // Convert to video coordinates
+  const vc1 = videoCoords(x, y);
+  const vc2 = videoCoords(x + w, y + h);
+  roi = { x: vc1.x, y: vc1.y, w: vc2.x - vc1.x, h: vc2.y - vc1.y };
+
+  document.getElementById('selection-status').textContent = `✓ Selection set — ${Math.round(w)}×${Math.round(h)}px`;
+  document.getElementById('selection-status').style.color = '#06b6d4';
+  document.getElementById('analyze-btn').disabled = false;
+
+  // Draw final box
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#06b6d4';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = 'rgba(6,182,212,0.1)';
+  ctx.fillRect(x, y, w, h);
+  // Label
+  ctx.fillStyle = '#06b6d4';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText('You', x + 4, y + 16);
+});
+
+// Touch support
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0], r = canvas.getBoundingClientRect();
+  startX = t.clientX - r.left; startY = t.clientY - r.top;
+  drawing = true; roi = null;
+});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t = e.touches[0], r = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: t.clientX, clientY: t.clientY }));
+});
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  canvas.dispatchEvent(new MouseEvent('mouseup', { clientX: t.clientX, clientY: t.clientY }));
+});
+
+// ── Analysis ───────────────────────────────────────────────────────────────
+document.getElementById('analyze-btn').onclick = () => analyze();
+
+async function analyze() {
+  if (!roi) return;
+  const distance = parseFloat(document.getElementById('distance').value) || 100;
+  const course   = document.getElementById('course').value;
+  const stroke   = document.getElementById('stroke').value;
+  const lengths  = distance / (course === 'LCM' ? 50 : 25);
+
+  document.getElementById('video-section').style.display = 'none';
+  const progressSection = document.getElementById('progress-section');
+  progressSection.style.display = '';
+  setProgress(0, 'Extracting frames...');
+
+  // We'll use an offscreen canvas to sample frames
+  const offCanvas = document.createElement('canvas');
+  const offCtx    = offCanvas.getContext('2d');
+  offCanvas.width  = videoEl.videoWidth;
+  offCanvas.height = videoEl.videoHeight;
+
+  const duration = videoEl.duration;
+  const fps      = 10; // sample 10 frames/sec — enough for stroke detection
+  const total    = Math.floor(duration * fps);
+  const signal   = [];
+
+  // Seek through video frame by frame
+  for (let i = 0; i <= total; i++) {
+    const t = (i / fps);
+    await seekTo(videoEl, t);
+    offCtx.drawImage(videoEl, 0, 0);
+
+    // Extract ROI pixels
+    const rx = Math.max(0, Math.floor(roi.x));
+    const ry = Math.max(0, Math.floor(roi.y));
+    const rw = Math.min(Math.floor(roi.w), offCanvas.width  - rx);
+    const rh = Math.min(Math.floor(roi.h), offCanvas.height - ry);
+    if (rw < 2 || rh < 2) { signal.push(0); continue; }
+
+    const imgData = offCtx.getImageData(rx, ry, rw, rh).data;
+
+    // Compute mean brightness in ROI (simple motion proxy)
+    let sum = 0;
+    for (let p = 0; p < imgData.length; p += 4) {
+      sum += (imgData[p] * 0.299 + imgData[p+1] * 0.587 + imgData[p+2] * 0.114);
+    }
+    signal.push(sum / (imgData.length / 4));
+
+    setProgress((i / total) * 85, `Analyzing frame ${i}/${total}...`);
+  }
+
+  setProgress(90, 'Counting strokes...');
+
+  // Compute frame-difference signal (motion energy)
+  const diffSignal = [];
+  for (let i = 1; i < signal.length; i++) {
+    diffSignal.push(Math.abs(signal[i] - signal[i - 1]));
+  }
+
+  // Smooth the diff signal
+  const smoothed = smooth(diffSignal, 5);
+
+  // Find peaks (local maxima above threshold)
+  const threshold = mean(smoothed) + 0.4 * stddev(smoothed);
+  const minGap    = Math.floor(fps * minStrokeInterval(stroke)); // min frames between strokes
+  const peaks     = findPeaks(smoothed, threshold, minGap);
+
+  // Stroke count
+  const rawStrokes = peaks.length;
+  // Adjust: each peak = one arm pull (freestyle/back) or one full cycle (fly/breast)
+  const strokeCount = stroke === 'freestyle' || stroke === 'backstroke'
+    ? rawStrokes            // each peak ≈ one arm
+    : rawStrokes;           // each peak ≈ one full cycle
+
+  const speed  = distance / duration;
+  const spm    = (strokeCount / duration) * 60;
+  const spl    = strokeCount / Math.max(lengths, 1);
+  const pace   = 100 / speed; // seconds per 100m
+  const paceMin = Math.floor(pace / 60);
+  const paceSec = Math.round(pace % 60);
+
+  setProgress(100, 'Done!');
+  await new Promise(r => setTimeout(r, 400));
+
+  progressSection.style.display = 'none';
+  showResults({ speed, spm, spl, strokeCount, duration, pace: `${paceMin}:${String(paceSec).padStart(2,'0')}`, smoothed, fps, stroke, course });
+}
+
+function seekTo(video, time) {
+  return new Promise(resolve => {
+    video.currentTime = Math.min(time, video.duration - 0.05);
+    video.onseeked = resolve;
+  });
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+function smooth(arr, w) {
+  return arr.map((_, i) => {
+    const slice = arr.slice(Math.max(0, i - w), i + w + 1);
+    return slice.reduce((a, b) => a + b, 0) / slice.length;
+  });
+}
+
+function mean(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+function stddev(arr) {
+  const m = mean(arr);
+  return Math.sqrt(arr.reduce((s, x) => s + (x - m) ** 2, 0) / arr.length);
+}
+
+function minStrokeInterval(stroke) {
+  // Minimum seconds between strokes per style
+  return { freestyle: 0.3, backstroke: 0.3, breaststroke: 0.5, butterfly: 0.5 }[stroke] || 0.3;
+}
+
+function findPeaks(arr, threshold, minGap) {
+  const peaks = [];
+  for (let i = 1; i < arr.length - 1; i++) {
+    if (arr[i] > threshold && arr[i] >= arr[i - 1] && arr[i] >= arr[i + 1]) {
+      if (peaks.length === 0 || i - peaks[peaks.length - 1] >= minGap) {
+        peaks.push(i);
+      }
+    }
+  }
+  return peaks;
+}
+
+function showResults({ speed, spm, spl, strokeCount, duration, pace, smoothed, fps, stroke, course }) {
+  document.getElementById('results-section').style.display = '';
+  document.getElementById('res-speed').textContent   = speed.toFixed(2);
+  document.getElementById('res-pace').textContent    = pace;
+  document.getElementById('res-strokes').textContent = strokeCount;
+  document.getElementById('res-spm').textContent     = spm.toFixed(1);
+  document.getElementById('res-spl').textContent     = spl.toFixed(1);
+  document.getElementById('res-duration').textContent = fmtTime(duration);
+  document.getElementById('result-badge').textContent =
+    stroke.charAt(0).toUpperCase() + stroke.slice(1) + ' · ' + course;
+
+  drawChart(smoothed, fps);
+}
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60), sec = Math.round(s % 60);
+  return m > 0 ? `${m}:${String(sec).padStart(2,'0')}` : `${sec}s`;
+}
+
+function drawChart(signal, fps) {
+  const c  = document.getElementById('stroke-chart');
+  const cx = c.getContext('2d');
+  c.width  = c.parentElement.clientWidth;
+  c.height = 120;
+
+  const w = c.width, h = c.height;
+  const max = Math.max(...signal) || 1;
+  const min = Math.min(...signal);
+
+  // Background
+  cx.fillStyle = '#1f2937';
+  cx.fillRect(0, 0, w, h);
+
+  // Grid lines
+  cx.strokeStyle = '#374151';
+  cx.lineWidth = 1;
+  for (let y = 0; y <= 4; y++) {
+    cx.beginPath(); cx.moveTo(0, h * y / 4); cx.lineTo(w, h * y / 4); cx.stroke();
+  }
+
+  // Gradient fill
+  const grad = cx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(59,130,246,0.5)');
+  grad.addColorStop(1, 'rgba(6,182,212,0.05)');
+
+  cx.beginPath();
+  signal.forEach((v, i) => {
+    const x = (i / (signal.length - 1)) * w;
+    const y = h - ((v - min) / (max - min)) * h * 0.85 - h * 0.07;
+    i === 0 ? cx.moveTo(x, y) : cx.lineTo(x, y);
+  });
+  cx.lineTo(w, h); cx.lineTo(0, h); cx.closePath();
+  cx.fillStyle = grad; cx.fill();
+
+  // Line
+  cx.beginPath();
+  cx.strokeStyle = '#3b82f6'; cx.lineWidth = 2;
+  signal.forEach((v, i) => {
+    const x = (i / (signal.length - 1)) * w;
+    const y = h - ((v - min) / (max - min)) * h * 0.85 - h * 0.07;
+    i === 0 ? cx.moveTo(x, y) : cx.lineTo(x, y);
+  });
+  cx.stroke();
+}
+
+// ── Reset ──────────────────────────────────────────────────────────────────
+document.getElementById('reset-btn').onclick = () => {
+  videoFile = null; roi = null;
+  videoEl.src = '';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('upload-card').style.border = '';
+  document.getElementById('video-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('progress-section').style.display = 'none';
+  document.getElementById('selection-status').textContent = 'No selection yet';
+  document.getElementById('selection-status').style.color = '';
+  document.getElementById('analyze-btn').disabled = true;
+  fileInput.value = '';
+};
+</script>
+</body>
+</html>

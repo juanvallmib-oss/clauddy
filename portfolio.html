@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juan Vallmitjana — Engineer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafaf8;
+      --surface: #ffffff;
+      --border: #e8e8e4;
+      --text: #1a1a18;
+      --muted: #6b6b65;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --tag-bg: #f0f0ec;
+      --tag-text: #4a4a44;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    .wrapper {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 18px 0;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+    nav .wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav .logo {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 28px;
+    }
+    nav ul a {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    nav ul a:hover { color: var(--text); text-decoration: none; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 0 64px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-label {
+      font-size: 13px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero p {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 520px;
+      margin-bottom: 32px;
+    }
+    .hero-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-primary {
+      background: var(--text);
+      color: #fff;
+      border: 1px solid var(--text);
+    }
+    .btn-primary:hover { background: #333; border-color: #333; text-decoration: none; }
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: #bbb; text-decoration: none; }
+
+    /* ── Sections ── */
+    section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+    section:last-child { border-bottom: none; }
+
+    .section-header {
+      margin-bottom: 36px;
+    }
+    .section-title {
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .section-heading {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    /* ── Skills ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .skill-group h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 13px;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    /* ── Projects ── */
+    .projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .project-card:hover {
+      border-color: #ccc;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .project-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+    .project-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .project-links {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .project-links a {
+      font-size: 13px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+    .project-links a:hover { color: var(--text); border-color: #bbb; text-decoration: none; }
+    .project-desc {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Experience ── */
+    .exp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .exp-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 520px) {
+      .exp-item { grid-template-columns: 1fr; gap: 6px; }
+    }
+    .exp-date {
+      font-size: 13px;
+      color: var(--muted);
+      padding-top: 2px;
+    }
+    .exp-role {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .exp-company {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .exp-desc {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* ── Contact ── */
+    .contact-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .contact-item {
+      font-size: 14px;
+    }
+    .contact-item span {
+      color: var(--muted);
+      margin-right: 6px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+    }
+    footer p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="wrapper">
+      <!-- EDIT: your name/initials -->
+      <span class="logo">JV</span>
+      <ul>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="wrapper">
+
+    <!-- HERO -->
+    <section class="hero">
+      <!-- EDIT: label, name, tagline -->
+      <p class="hero-label">Software Engineer</p>
+      <h1>Juan Vallmitjana<br>Behrendt</h1>
+      <p>
+        <!-- EDIT: one or two sentences about you -->
+        I build software that solves real problems — from web apps to embedded systems.
+        Currently studying engineering and looking for my next opportunity.
+      </p>
+      <div class="hero-links">
+        <!-- EDIT: href values -->
+        <a href="mailto:you@example.com" class="btn btn-primary">Get in touch</a>
+        <a href="https://github.com/yourhandle" class="btn btn-outline" target="_blank">GitHub</a>
+        <a href="https://linkedin.com/in/yourhandle" class="btn btn-outline" target="_blank">LinkedIn</a>
+        <a href="resume.pdf" class="btn btn-outline" target="_blank">Resume</a>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="section-header">
+        <p class="section-title">Work</p>
+        <h2 class="section-heading">Projects</h2>
+      </div>
+
+      <div class="projects-list">
+
+        <!-- EDIT: duplicate/remove .project-card blocks as needed -->
+        <div class="project-card">
+          <div class="project-top">
+            <span class="project-name">Swim Analyzer</span>
+            <div class="project-links">
+              <a href="#">Demo</a>
+              <a href="#">GitHub</a>
+            </div>
+          </div>
+          <p class="project-desc">
+            AI-powered swim performance analyzer using computer vision to detect stroke technique and give real-time feedback. Built with Python and a local LLaVA model.
+          </p>
+          <div class="tags">
+            <span class="tag">Python</span>
+            <span class="tag">Ollama</span>
+            <span class="tag">OpenCV</span>
+            <span class="tag">HTML/CSS</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <div class="project-top">
+            <span class="project-name">Internship Tracker</span>
+            <div class="project-links">
+              <a href="#">Demo</a>
+            </div>
+          </div>
+          <p class="project-desc">
+            Personal dashboard to track internship applications, deadlines, and status — built as a single-page app with no backend.
+          </p>
+          <div class="tags">
+            <span class="tag">JavaScript</span>
+            <span class="tag">HTML</span>
+            <span class="tag">CSS</span>
+          </div>
+        </div>
+
+        <div class="project-card">
+          <div class="project-top">
+            <span class="project-name">Project Three</span>
+            <div class="project-links">
+              <a href="#">GitHub</a>
+            </div>
+          </div>
+          <p class="project-desc">
+            Short description of the project and what problem it solves.
+          </p>
+          <div class="tags">
+            <span class="tag">Tag</span>
+            <span class="tag">Tag</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience">
+      <div class="section-header">
+        <p class="section-title">Background</p>
+        <h2 class="section-heading">Experience</h2>
+      </div>
+
+      <div class="exp-list">
+
+        <!-- EDIT: duplicate/remove blocks as needed -->
+        <div class="exp-item">
+          <span class="exp-date">2025 — now</span>
+          <div>
+            <p class="exp-role">Software Engineering Intern</p>
+            <p class="exp-company">Company Name</p>
+            <p class="exp-desc">What you built or contributed to. Keep it concrete — mention tech used and impact.</p>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <span class="exp-date">2023 — 2025</span>
+          <div>
+            <p class="exp-role">Research Assistant</p>
+            <p class="exp-company">University / Lab Name</p>
+            <p class="exp-desc">Describe the research, tools, or systems you worked on.</p>
+          </div>
+        </div>
+
+        <div class="exp-item">
+          <span class="exp-date">2022 — 2026</span>
+          <div>
+            <p class="exp-role">B.S. Computer Engineering</p>
+            <p class="exp-company">Your University</p>
+            <p class="exp-desc">Relevant coursework, GPA (if strong), clubs, or notable projects.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="section-header">
+        <p class="section-title">Toolkit</p>
+        <h2 class="section-heading">Skills</h2>
+      </div>
+
+      <div class="skills-grid">
+
+        <!-- EDIT: add/remove groups and tags -->
+        <div class="skill-group">
+          <h3>Languages</h3>
+          <div class="tags">
+            <span class="tag">Python</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">C/C++</span>
+            <span class="tag">Java</span>
+            <span class="tag">SQL</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3>Web</h3>
+          <div class="tags">
+            <span class="tag">HTML/CSS</span>
+            <span class="tag">React</span>
+            <span class="tag">Node.js</span>
+            <span class="tag">Flask</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3>Tools</h3>
+          <div class="tags">
+            <span class="tag">Git</span>
+            <span class="tag">Docker</span>
+            <span class="tag">Linux</span>
+            <span class="tag">VS Code</span>
+          </div>
+        </div>
+
+        <div class="skill-group">
+          <h3>Other</h3>
+          <div class="tags">
+            <span class="tag">Machine Learning</span>
+            <span class="tag">Computer Vision</span>
+            <span class="tag">REST APIs</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section-header">
+        <p class="section-title">Say hello</p>
+        <h2 class="section-heading">Contact</h2>
+      </div>
+      <p style="color:var(--muted);font-size:15px;max-width:440px;margin-bottom:28px;">
+        <!-- EDIT: your contact blurb -->
+        Open to internships, research roles, and interesting side projects. Best reached by email.
+      </p>
+      <div class="contact-grid">
+        <!-- EDIT: your actual links -->
+        <div class="contact-item"><span>Email</span><a href="mailto:you@example.com">you@example.com</a></div>
+        <div class="contact-item"><span>GitHub</span><a href="https://github.com/yourhandle" target="_blank">yourhandle</a></div>
+        <div class="contact-item"><span>LinkedIn</span><a href="https://linkedin.com/in/yourhandle" target="_blank">yourhandle</a></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrapper">
+      <!-- EDIT: your name -->
+      <p>Juan Vallmitjana Behrendt</p>
+    </div>
+  </footer>
+
+</body>
+</html>

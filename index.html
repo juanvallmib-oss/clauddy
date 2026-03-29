@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juan's Site</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: grid; place-items: center; }
+  .card { text-align: center; padding: 3rem; }
+  h1 { font-size: 3rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+  p { color: #aaa; font-size: 1.1rem; margin-bottom: 2rem; }
+  .btn { padding: .75rem 2rem; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 2rem; font-size: 1rem; cursor: pointer; transition: transform .2s, opacity .2s; }
+  .btn:hover { transform: scale(1.05); opacity: .9; }
+  #msg { margin-top: 1.5rem; color: #667eea; font-size: .95rem; min-height: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Hello, Juan.</h1>
+  <p>A tiny site, built in seconds.</p>
+  <button class="btn" onclick="greet()">Say hi</button>
+  <div id="msg"></div>
+</div>
+<script>
+  const msgs = ["Hey there!", "Looking good.", "Claude was here.", "That's all folks!"];
+  let i = 0;
+  function greet() { document.getElementById('msg').textContent = msgs[i++ % msgs.length]; }
+</script>
+</body>
+</html>

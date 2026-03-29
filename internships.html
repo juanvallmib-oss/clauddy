@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering Internships Near You</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f7f5; color: #1a1a1a; min-height: 100vh; }
+
+  nav { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 28px; height: 54px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 700; font-size: .95rem; }
+  .logo span { color: #2563eb; }
+  nav small { color: #bbb; font-size: .78rem; }
+
+  .hero { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 44px 24px 32px; text-align: center; }
+  .hero h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -.4px; margin-bottom: 8px; }
+  .hero h1 em { font-style: normal; color: #2563eb; }
+  .hero p { color: #777; font-size: .88rem; margin-bottom: 26px; }
+
+  .search-row { display: flex; align-items: center; gap: 8px; max-width: 520px; margin: 0 auto 14px; background: #fff; border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 5px 5px 5px 14px; }
+  .search-row input { flex: 1; border: none; background: transparent; font-size: .88rem; outline: none; color: #1a1a1a; min-width: 0; }
+  .search-row input::placeholder { color: #bbb; }
+  .geo-btn { background: none; border: none; cursor: pointer; color: #aaa; padding: 6px; display: flex; }
+  .geo-btn:hover { color: #2563eb; }
+  .go-btn { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 9px 18px; font-size: .83rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .go-btn:hover { background: #1d4ed8; }
+
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; max-width: 520px; margin: 0 auto; }
+  .chip { padding: 5px 13px; border-radius: 20px; font-size: .74rem; font-weight: 500; border: 1px solid #e0e0e0; background: #fff; cursor: pointer; color: #555; transition: .12s; }
+  .chip.on { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .chip:hover:not(.on) { background: #f0f0f0; }
+
+  .main { max-width: 860px; margin: 0 auto; padding: 28px 18px 60px; }
+
+  .status-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .status-bar span { font-size: .8rem; color: #999; }
+  .status-bar strong { color: #1a1a1a; }
+
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+
+  .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 13px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s; }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .card-co { display: flex; align-items: center; gap: 10px; }
+  .co-logo { width: 38px; height: 38px; border-radius: 9px; background: #f0f4ff; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; border: 1px solid #e8e8e8; }
+  .co-name { font-weight: 600; font-size: .9rem; }
+  .co-loc { font-size: .74rem; color: #999; margin-top: 2px; }
+  .tag { padding: 3px 9px; border-radius: 20px; font-size: .7rem; font-weight: 600; white-space: nowrap; }
+  .tag.remote { background: #e8f5e9; color: #2e7d32; }
+  .tag.hybrid { background: #fff3e0; color: #e65100; }
+  .tag.onsite { background: #f3e5f5; color: #6a1b9a; }
+  .tag.weekend { background: #fce4ec; color: #880e4f; }
+  .tag.flexible { background: #e0f7fa; color: #006064; }
+  .card-title { font-weight: 700; font-size: .95rem; line-height: 1.3; }
+  .card-desc { font-size: .8rem; color: #777; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
+  .card-meta { font-size: .74rem; color: #bbb; }
+  .apply-btn { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 7px 14px; font-size: .76rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .apply-btn:hover { background: #333; }
+
+  .loading { text-align: center; padding: 60px 0; color: #aaa; font-size: .9rem; }
+  .loading .spin { width: 28px; height: 28px; border: 3px solid #e8e8e8; border-top-color: #2563eb; border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 60px 0; color: #bbb; }
+  .empty p { font-size: .88rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">intern<span>finder</span></div>
+  <small>Engineering &amp; Mechanics roles near you</small>
+</nav>
+
+<div class="hero">
+  <h1>Find <em>engineering internships</em> near you</h1>
+  <p>Real listings from across the web — mechanical, aerospace, and mechanics roles.</p>
+  <div class="search-row">
+    <button class="geo-btn" id="geo-btn">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/><circle cx="12" cy="12" r="9"/></svg>
+    </button>
+    <input id="loc" placeholder="Zip code or city…" />
+    <button class="go-btn" id="go-btn">Search</button>
+  </div>
+  <div class="chips">
+    <div class="chip on" data-q="mechanical engineering intern">Mechanical</div>
+    <div class="chip" data-q="aerospace engineering intern">Aerospace</div>
+    <div class="chip" data-q="civil engineering intern">Civil</div>
+    <div class="chip" data-q="electrical engineering intern">Electrical</div>
+    <div class="chip" data-q="mechanic apprentice">Mechanic 🔧</div>
+    <div class="chip" data-q="automotive mechanic intern">Auto Mechanic</div>
+    <div class="chip weekend-chip" data-q="weekend part time engineering intern">Weekend / Flexible</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="status-bar">
+    <span id="status-txt">Enter a location to search.</span>
+    <span id="count-txt"></span>
+  </div>
+  <div id="grid">
+    <div class="loading" id="loading" style="display:none">
+      <div class="spin"></div>
+      Fetching listings…
+    </div>
+  </div>
+</div>
+
+<script>
+const USAJOBS_EMAIL = "internfinder@example.com";
+let activeQuery = "mechanical engineering intern";
+let activeLocation = "";
+
+// ── Chips ────────────────────────────────────────────────────────────────────
+document.querySelectorAll(".chip").forEach(c => {
+  c.onclick = () => {
+    document.querySelectorAll(".chip").forEach(x => x.classList.remove("on"));
+    c.classList.add("on");
+    activeQuery = c.dataset.q;
+    if (activeLocation) fetchJobs();
+  };
+});
+
+// ── Geo ──────────────────────────────────────────────────────────────────────
+document.getElementById("geo-btn").onclick = () => {
+  if (!navigator.geolocation) return alert("Geolocation not available.");
+  setStatus("Getting your location…");
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+      .then(r => r.json()).then(d => {
+        const zip = d.address.postcode || "";
+        const city = d.address.city || d.address.town || d.address.county || "";
+        const state = d.address.state_code || "";
+        activeLocation = zip || `${city}, ${state}`;
+        document.getElementById("loc").value = activeLocation;
+        fetchJobs();
+      }).catch(() => { activeLocation = `${lat.toFixed(2)},${lon.toFixed(2)}`; fetchJobs(); });
+  }, () => alert("Could not get location. Enter zip manually."));
+};
+
+document.getElementById("go-btn").onclick = () => {
+  activeLocation = document.getElementById("loc").value.trim();
+  if (!activeLocation) return;
+  fetchJobs();
+};
+document.getElementById("loc").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("go-btn").click(); });
+
+// ── Fetch ─────────────────────────────────────────────────────────────────────
+async function fetchJobs() {
+  setStatus("Searching…");
+  document.getElementById("grid").innerHTML = `<div class="loading"><div class="spin"></div>Fetching listings…</div>`;
+  document.getElementById("count-txt").textContent = "";
+
+  try {
+    const params = new URLSearchParams({ q: activeQuery, location: activeLocation });
+    const res = await fetch(`http://localhost:5051/jobs?${params}`);
+    const jobs = await res.json();
+    render(jobs);
+  } catch(e) {
+    document.getElementById("grid").innerHTML = `<div class="empty">⚠️<p>Could not reach jobs server. Make sure jobs_server.py is running.</p></div>`;
+    setStatus("Server error.");
+  }
+}
+
+// ── The Muse API (free, no key) ───────────────────────────────────────────────
+async function fetchMuse() {
+  const q = activeQuery.replace(/ intern$/, "").replace(/ /g, "+");
+  const url = `https://www.themuse.com/api/public/jobs?category=Engineering&level=Internship&page=0&descending=true`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return (data.results || []).filter(j => {
+    const txt = (j.name + " " + (j.contents||"")).toLowerCase();
+    const qWords = activeQuery.toLowerCase().split(" ");
+    return qWords.some(w => txt.includes(w));
+  }).slice(0, 15).map(j => ({
+    title: j.name,
+    company: j.company?.name || "Company",
+    location: j.locations?.map(l => l.name).join(", ") || "Various",
+    type: j.type || "Internship",
+    url: j.refs?.landing_page || "#",
+    desc: (j.contents || "").replace(/<[^>]+>/g, "").slice(0, 200),
+    source: "The Muse",
+    schedule: guessSchedule(j.name + " " + (j.contents||"")),
+    icon: pickIcon(j.name),
+  }));
+}
+
+// ── USAJobs API (free, just needs User-Agent email) ───────────────────────────
+async function fetchUSAJobs() {
+  const keyword = encodeURIComponent(activeQuery);
+  const loc = encodeURIComponent(activeLocation);
+  const url = `https://data.usajobs.gov/api/Search?Keyword=${keyword}&LocationName=${loc}&Radius=50&ResultsPerPage=12&Fields=Min`;
+  const res = await fetch(url, {
+    headers: { "Host": "data.usajobs.gov", "User-Agent": USAJOBS_EMAIL, "Authorization-Key": "" }
+  });
+  const data = await res.json();
+  const items = data?.SearchResult?.SearchResultItems || [];
+  return items.map(item => {
+    const d = item.MatchedObjectDescriptor;
+    return {
+      title: d.PositionTitle,
+      company: d.OrganizationName,
+      location: d.PositionLocationDisplay,
+      type: d.JobCategory?.[0]?.Name || "Internship",
+      url: d.ApplyURI?.[0] || "#",
+      desc: (d.QualificationSummary || d.UserArea?.Details?.JobSummary || "").slice(0, 200),
+      source: "USA Jobs",
+      schedule: d.PositionSchedule?.[0]?.Name || "Full-time",
+      icon: "🏛️",
+    };
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render(jobs) {
+  const grid = document.getElementById("grid");
+  if (!jobs.length) {
+    grid.innerHTML = `<div class="empty">😕<p>No listings found. Try a different location or category.</p></div>`;
+    setStatus("No results found.");
+    return;
+  }
+
+  setStatus(`Showing results near <strong>${activeLocation}</strong>`);
+  document.getElementById("count-txt").textContent = `${jobs.length} listings`;
+
+  grid.innerHTML = jobs.map(j => `
+    <div class="card">
+      <div class="card-top">
+        <div class="card-co">
+          <div class="co-logo">${j.icon}</div>
+          <div>
+            <div class="co-name">${esc(j.company)}</div>
+            <div class="co-loc">📍 ${esc(j.location)}</div>
+          </div>
+        </div>
+        <span class="tag ${scheduleClass(j.schedule)}">${j.schedule}</span>
+      </div>
+      <div class="card-title">${esc(j.title)}</div>
+      ${j.desc ? `<div class="card-desc">${esc(j.desc)}</div>` : ""}
+      <div class="card-footer">
+        <span class="card-meta">${j.source}</span>
+        <a class="apply-btn" href="${j.url}" target="_blank" rel="noopener">Apply →</a>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function guessSchedule(text) {
+  const t = text.toLowerCase();
+  if (t.includes("weekend")) return "Weekend";
+  if (t.includes("part-time") || t.includes("part time")) return "Part-time";
+  if (t.includes("remote")) return "Remote";
+  if (t.includes("hybrid")) return "Hybrid";
+  return "Full-time";
+}
+function scheduleClass(s) {
+  if (!s) return "onsite";
+  const t = s.toLowerCase();
+  if (t.includes("weekend")) return "weekend";
+  if (t.includes("remote")) return "remote";
+  if (t.includes("hybrid")) return "hybrid";
+  if (t.includes("part") || t.includes("flex")) return "flexible";
+  return "onsite";
+}
+function pickIcon(title) {
+  const t = (title||"").toLowerCase();
+  if (t.includes("mechanic") || t.includes("auto")) return "🔧";
+  if (t.includes("aerospace") || t.includes("flight")) return "✈️";
+  if (t.includes("civil") || t.includes("struct")) return "🏗️";
+  if (t.includes("electric")) return "⚡";
+  if (t.includes("software") || t.includes("data")) return "💻";
+  if (t.includes("chemical")) return "⚗️";
+  return "⚙️";
+}
+function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function setStatus(html) { document.getElementById("status-txt").innerHTML = html; }
+function showLoading(b) {}
+</script>
+</body>
+</html>

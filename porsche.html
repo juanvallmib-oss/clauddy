@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porsche 911</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#111;color:#fff}
+  header{height:100vh;background:linear-gradient(to bottom,#0008,#111),url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Porsche_911_GT3_%28992%29_IAA_2021.jpg/1280px-Porsche_911_GT3_%28992%29_IAA_2021.jpg') center/cover no-repeat;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem}
+  header h1{font-size:4rem;letter-spacing:.1em;color:#e8c84b}
+  header p{font-size:1.2rem;color:#ccc;margin-top:.5rem}
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;padding:4rem 2rem;max-width:900px;margin:0 auto}
+  .spec{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:1rem;padding:2rem;text-align:center}
+  .spec h2{font-size:2rem;color:#e8c84b}
+  .spec p{color:#aaa;font-size:.9rem;margin-top:.4rem}
+  .models{padding:3rem 2rem;max-width:900px;margin:0 auto}
+  .models h2{font-size:1.8rem;color:#e8c84b;margin-bottom:1.5rem;text-align:center}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+  .model{background:#1a1a1a;border-radius:.75rem;padding:1.5rem;border-left:3px solid #e8c84b}
+  .model h3{font-size:1.1rem;margin-bottom:.4rem}
+  .model p{color:#aaa;font-size:.85rem}
+  footer{text-align:center;padding:2rem;color:#555;font-size:.8rem}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PORSCHE 911</h1>
+  <p>Born in 1963. Perfected forever.</p>
+</header>
+
+<section class="specs">
+  <div class="spec"><h2>3.0L</h2><p>Twin-turbo flat-six</p></div>
+  <div class="spec"><h2>473 hp</h2><p>Carrera S output</p></div>
+  <div class="spec"><h2>3.3s</h2><p>0–60 mph</p></div>
+  <div class="spec"><h2>191 mph</h2><p>Top speed</p></div>
+</section>
+
+<section style="max-width:900px;margin:0 auto;padding:0 2rem 3rem">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Porsche_911_GT3_%28992%29_IAA_2021.jpg/1280px-Porsche_911_GT3_%28992%29_IAA_2021.jpg" alt="Porsche 911 GT3" style="width:100%;border-radius:1rem;display:block">
+</section>
+
+<section class="models">
+  <h2>Variants</h2>
+  <div class="grid">
+    <div class="model"><h3>Carrera</h3><p>The everyday icon. 385 hp of pure balance.</p></div>
+    <div class="model"><h3>Carrera S</h3><p>More power, wider body, sports exhaust.</p></div>
+    <div class="model"><h3>Targa</h3><p>Open-air style with the iconic roll bar.</p></div>
+    <div class="model"><h3>GT3</h3><p>Naturally aspirated. Track-bred. 502 hp.</p></div>
+    <div class="model"><h3>Turbo S</h3><p>640 hp. 2.6s 0–60. Daily supercar.</p></div>
+    <div class="model"><h3>GT3 RS</h3><p>Aerodynamics weaponized. The ultimate 911.</p></div>
+  </div>
+</section>
+
+<footer>Porsche 911 — 60+ years of rear-engine perfection.</footer>
+
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bills</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #1a1a1a;
+    padding: 48px 24px 80px;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 36px;
+    border-bottom: 1.5px solid #e8e8e8;
+    padding-bottom: 20px;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.3px; }
+  header p  { font-size: 0.82rem; color: #999; margin-top: 3px; }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .summary-box {
+    border: 1px solid #ebebeb;
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .summary-box .label { font-size: 0.73rem; color: #999; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .summary-box .amount { font-size: 1.4rem; font-weight: 700; }
+  .summary-box.due .amount { color: #d94f3d; }
+  .summary-box.paid .amount { color: #2e7d32; }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .controls h2 { font-size: 0.85rem; font-weight: 600; color: #555; }
+
+  button.add-btn {
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button.add-btn:hover { background: #333; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  thead th {
+    text-align: left;
+    font-size: 0.72rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 0 10px 10px;
+    font-weight: 500;
+  }
+  tbody tr {
+    border-top: 1px solid #f0f0f0;
+    transition: background .1s;
+  }
+  tbody tr:hover { background: #fafafa; }
+  tbody td {
+    padding: 13px 10px;
+    vertical-align: middle;
+  }
+
+  .bill-name { font-weight: 500; }
+  .bill-cat  { font-size: 0.75rem; color: #999; margin-top: 2px; }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+  .status-badge.paid     { background: #e8f5e9; color: #2e7d32; }
+  .status-badge.due      { background: #fff3e0; color: #e65100; }
+  .status-badge.overdue  { background: #fdecea; color: #c62828; }
+
+  .amount-cell { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .action-btn {
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #555;
+    transition: .15s;
+  }
+  .action-btn:hover { background: #f5f5f5; border-color: #bbb; }
+  .action-btn.del { color: #c62828; border-color: #f5c6c6; }
+  .action-btn.del:hover { background: #fdecea; }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.3);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  }
+  .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 20px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 5px; }
+  .field input, .field select {
+    width: 100%; padding: 9px 11px;
+    border: 1px solid #ddd; border-radius: 7px;
+    font-size: 0.88rem; outline: none; color: #1a1a1a;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus { border-color: #1a1a1a; }
+
+  .modal-row { display: flex; gap: 12px; }
+  .modal-row .field { flex: 1; }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+  .btn-cancel { background: #fff; border: 1px solid #e0e0e0; border-radius: 7px; padding: 8px 16px; font-size: 0.83rem; cursor: pointer; color: #555; }
+  .btn-save   { background: #1a1a1a; color: #fff; border: none; border-radius: 7px; padding: 8px 18px; font-size: 0.83rem; font-weight: 600; cursor: pointer; }
+  .btn-save:hover { background: #333; }
+
+  .empty { text-align: center; padding: 48px 0; color: #bbb; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Bills</h1>
+    <p id="month-label"></p>
+  </div>
+</header>
+
+<div class="summary">
+  <div class="summary-box">
+    <div class="label">Total / Month</div>
+    <div class="amount" id="s-total">$0.00</div>
+  </div>
+  <div class="summary-box due">
+    <div class="label">Still Due</div>
+    <div class="amount" id="s-due">$0.00</div>
+  </div>
+  <div class="summary-box paid">
+    <div class="label">Paid</div>
+    <div class="amount" id="s-paid">$0.00</div>
+  </div>
+</div>
+
+<div class="controls">
+  <h2>ALL BILLS</h2>
+  <button class="add-btn" id="open-modal">+ Add Bill</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Bill</th>
+      <th>Due Date</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="bill-list"></tbody>
+</table>
+<div class="empty" id="empty-msg" style="display:none">No bills yet — add one above.</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3 id="modal-title">Add Bill</h3>
+    <div class="field">
+      <label>Bill Name</label>
+      <input type="text" id="f-name" placeholder="e.g. Netflix, Rent, Electric" />
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select id="f-cat">
+        <option value="Housing">Housing</option>
+        <option value="Utilities">Utilities</option>
+        <option value="Subscriptions">Subscriptions</option>
+        <option value="Insurance">Insurance</option>
+        <option value="Phone">Phone</option>
+        <option value="Internet">Internet</option>
+        <option value="Food">Food</option>
+        <option value="Transport">Transport</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <div class="field">
+        <label>Amount ($)</label>
+        <input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Due Date</label>
+        <input type="date" id="f-date" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="f-status">
+        <option value="due">Due</option>
+        <option value="paid">Paid</option>
+        <option value="overdue">Overdue</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="close-modal">Cancel</button>
+      <button class="btn-save" id="save-bill">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let bills = JSON.parse(localStorage.getItem('bills') || '[]');
+  let editId = null;
+
+  const monthLabel = document.getElementById('month-label');
+  const billList   = document.getElementById('bill-list');
+  const emptyMsg   = document.getElementById('empty-msg');
+  const modalBg    = document.getElementById('modal-bg');
+  const modalTitle = document.getElementById('modal-title');
+
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
+  monthLabel.textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+
+  function save() { localStorage.setItem('bills', JSON.stringify(bills)); }
+
+  function fmt(n) { return '$' + parseFloat(n||0).toFixed(2); }
+
+  function render() {
+    billList.innerHTML = '';
+    if (bills.length === 0) {
+      emptyMsg.style.display = 'block';
+    } else {
+      emptyMsg.style.display = 'none';
+    }
+
+    let total = 0, due = 0, paid = 0;
+    bills.forEach(b => {
+      total += +b.amount;
+      if (b.status === 'paid') paid += +b.amount;
+      else due += +b.amount;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="bill-name">${b.name}</div>
+          <div class="bill-cat">${b.cat}</div>
+        </td>
+        <td>${b.date ? new Date(b.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'}</td>
+        <td class="amount-cell">${fmt(b.amount)}</td>
+        <td><span class="status-badge ${b.status}">${b.status.charAt(0).toUpperCase()+b.status.slice(1)}</span></td>
+        <td style="white-space:nowrap;text-align:right">
+          <button class="action-btn" onclick="openEdit('${b.id}')">Edit</button>
+          <button class="action-btn del" onclick="deleteBill('${b.id}')" style="margin-left:6px">Delete</button>
+        </td>`;
+      billList.appendChild(tr);
+    });
+
+    document.getElementById('s-total').textContent = fmt(total);
+    document.getElementById('s-due').textContent   = fmt(due);
+    document.getElementById('s-paid').textContent  = fmt(paid);
+  }
+
+  function clearForm() {
+    document.getElementById('f-name').value   = '';
+    document.getElementById('f-cat').value    = 'Other';
+    document.getElementById('f-amount').value = '';
+    document.getElementById('f-date').value   = '';
+    document.getElementById('f-status').value = 'due';
+  }
+
+  document.getElementById('open-modal').onclick = () => {
+    editId = null;
+    modalTitle.textContent = 'Add Bill';
+    clearForm();
+    modalBg.classList.add('open');
+  };
+  document.getElementById('close-modal').onclick = () => modalBg.classList.remove('open');
+  modalBg.onclick = e => { if (e.target === modalBg) modalBg.classList.remove('open'); };
+
+  window.openEdit = id => {
+    const b = bills.find(x => x.id === id);
+    if (!b) return;
+    editId = id;
+    modalTitle.textContent = 'Edit Bill';
+    document.getElementById('f-name').value   = b.name;
+    document.getElementById('f-cat').value    = b.cat;
+    document.getElementById('f-amount').value = b.amount;
+    document.getElementById('f-date').value   = b.date;
+    document.getElementById('f-status').value = b.status;
+    modalBg.classList.add('open');
+  };
+
+  window.deleteBill = id => {
+    if (!confirm('Delete this bill?')) return;
+    bills = bills.filter(b => b.id !== id);
+    save(); render();
+  };
+
+  document.getElementById('save-bill').onclick = () => {
+    const name   = document.getElementById('f-name').value.trim();
+    const cat    = document.getElementById('f-cat').value;
+    const amount = document.getElementById('f-amount').value;
+    const date   = document.getElementById('f-date').value;
+    const status = document.getElementById('f-status').value;
+    if (!name || !amount) { alert('Name and amount are required.'); return; }
+
+    if (editId) {
+      const b = bills.find(x => x.id === editId);
+      Object.assign(b, { name, cat, amount, date, status });
+    } else {
+      bills.push({ id: Date.now().toString(), name, cat, amount, date, status });
+    }
+    save(); render();
+    modalBg.classList.remove('open');
+  };
+
+  render();
+</script>
+</body>
+</html>

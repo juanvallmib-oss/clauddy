@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swim Analyzer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0e1a;
+    color: #e8eaf0;
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+  }
+  h1 {
+    font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px;
+    background: linear-gradient(135deg, #4fc3f7, #0288d1);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: #607d8b; font-size: 0.9rem; margin-bottom: 36px; }
+  .card {
+    background: #111827; border: 1px solid #1e2d3d; border-radius: 16px;
+    padding: 28px; width: 100%; max-width: 760px; margin-bottom: 20px;
+  }
+  .card h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #4fc3f7; margin-bottom: 16px; }
+  label { font-size: 0.8rem; color: #90a4ae; display: block; margin-bottom: 6px; }
+  input[type=text], select {
+    width: 100%; background: #0d1520; border: 1px solid #1e2d3d; border-radius: 8px;
+    color: #e8eaf0; padding: 10px 14px; font-size: 0.9rem; outline: none; transition: border-color .2s;
+  }
+  input[type=text]:focus, select:focus { border-color: #4fc3f7; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  button {
+    background: linear-gradient(135deg, #0288d1, #0277bd); color: #fff; border: none;
+    border-radius: 10px; padding: 12px 24px; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; transition: opacity .2s, transform .1s;
+  }
+  button:hover { opacity: .9; }
+  button:active { transform: scale(.98); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  #canvas-wrap {
+    position: relative; display: none; margin-top: 16px; border-radius: 10px;
+    overflow: hidden; cursor: crosshair; user-select: none;
+  }
+  #preview-canvas { display: block; width: 100%; }
+  #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .roi-hint { font-size: 0.78rem; color: #546e7a; margin-top: 8px; text-align: center; }
+  #status {
+    display: none; align-items: center; gap: 10px; background: #0d1520;
+    border: 1px solid #1e2d3d; border-radius: 10px; padding: 12px 16px;
+    font-size: 0.85rem; color: #90a4ae; margin-top: 16px;
+  }
+  #status.show { display: flex; }
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid #1e2d3d; border-top-color: #4fc3f7;
+    border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat { background: #0d1520; border: 1px solid #1e2d3d; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat .val { font-size: 1.8rem; font-weight: 700; color: #4fc3f7; line-height: 1; }
+  .stat .lbl { font-size: 0.72rem; color: #546e7a; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
+  .badge.high { background: #1b5e20; color: #69f0ae; }
+  .badge.medium { background: #e65100; color: #ffccbc; }
+  .badge.low { background: #b71c1c; color: #ffcdd2; }
+  .notes-box {
+    background: #0d1520; border: 1px solid #1e2d3d; border-radius: 10px;
+    padding: 16px; font-size: 0.85rem; line-height: 1.7; color: #b0bec5; margin-top: 12px;
+  }
+  .notes-box strong { color: #e8eaf0; display: block; margin-bottom: 4px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .5px; }
+  #sheet-img { width: 100%; border-radius: 8px; margin-top: 16px; }
+  .err {
+    background: #1c0a0a; border: 1px solid #b71c1c; color: #ef9a9a;
+    border-radius: 10px; padding: 12px 16px; font-size: 0.85rem; margin-top: 12px; display: none;
+  }
+  .err.show { display: block; }
+</style>
+</head>
+<body>
+
+<h1>Swim Analyzer</h1>
+<p class="subtitle">AI-powered stroke count &amp; speed analysis</p>
+
+<div class="card">
+  <h2>1 — Video File</h2>
+  <label>Full path to your video file on disk</label>
+  <input type="text" id="path-input"
+    placeholder="/Users/you/Downloads/swim.mp4"
+    value="/Users/juanvallmitjanabehrendt/Downloads/ESP_OPEN26_M800FS_FINALA_VargasC_500mb.mp4" />
+  <button id="load-btn" style="margin-top:12px;width:100%">Load Video Preview</button>
+  <div class="err" id="load-err"></div>
+</div>
+
+<div class="card" id="roi-card" style="display:none">
+  <h2>2 — Select Swimmer</h2>
+  <div id="canvas-wrap">
+    <canvas id="preview-canvas"></canvas>
+    <canvas id="overlay-canvas"></canvas>
+  </div>
+  <p class="roi-hint">Click and drag on the frame to draw a box around the swimmer</p>
+  <div id="roi-info" style="text-align:center;font-size:.8rem;color:#4fc3f7;margin-top:6px;min-height:18px;"></div>
+</div>
+
+<div class="card" id="settings-card" style="display:none">
+  <h2>3 — Swim Details</h2>
+  <div class="row" style="margin-bottom:12px">
+    <div>
+      <label>Stroke</label>
+      <select id="stroke">
+        <option value="freestyle">Freestyle</option>
+        <option value="backstroke">Backstroke</option>
+        <option value="butterfly">Butterfly</option>
+        <option value="breaststroke">Breaststroke</option>
+      </select>
+    </div>
+    <div>
+      <label>Pool</label>
+      <select id="course">
+        <option value="LCM">LCM (50 m)</option>
+        <option value="SCM">SCM (25 m)</option>
+        <option value="SCY">SCY (25 yd)</option>
+      </select>
+    </div>
+    <div>
+      <label>Distance (m)</label>
+      <input type="text" id="distance" value="800" />
+    </div>
+  </div>
+  <button id="analyze-btn" disabled>Analyze with Claude AI</button>
+  <div id="status">
+    <div class="spinner"></div>
+    <span id="status-text">Extracting frames…</span>
+  </div>
+  <div class="err" id="analyze-err"></div>
+</div>
+
+<div class="card" id="results" style="display:none">
+  <h2>Results</h2>
+  <div class="stats-grid">
+    <div class="stat"><div class="val" id="r-speed">—</div><div class="lbl">Speed (m/s)</div></div>
+    <div class="stat"><div class="val" id="r-pace">—</div><div class="lbl">Pace (min/100m)</div></div>
+    <div class="stat"><div class="val" id="r-dur">—</div><div class="lbl">Duration (s)</div></div>
+    <div class="stat"><div class="val" id="r-strokes">—</div><div class="lbl">Total Strokes</div></div>
+    <div class="stat"><div class="val" id="r-spl">—</div><div class="lbl">Strokes/Length</div></div>
+    <div class="stat"><div class="val" id="r-spm">—</div><div class="lbl">Strokes/Min</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <span style="font-size:.8rem;color:#546e7a">Confidence</span>
+    <span class="badge" id="r-conf">—</span>
+  </div>
+  <div class="notes-box" id="r-notes"></div>
+  <img id="sheet-img" alt="Contact sheet" style="display:none" />
+</div>
+
+<script>
+  const pathInput     = document.getElementById('path-input');
+  const loadBtn       = document.getElementById('load-btn');
+  const loadErr       = document.getElementById('load-err');
+  const roiCard       = document.getElementById('roi-card');
+  const settingsCard  = document.getElementById('settings-card');
+  const canvasWrap    = document.getElementById('canvas-wrap');
+  const previewCanvas = document.getElementById('preview-canvas');
+  const overlayCanvas = document.getElementById('overlay-canvas');
+  const roiInfo       = document.getElementById('roi-info');
+  const analyzeBtn    = document.getElementById('analyze-btn');
+  const statusDiv     = document.getElementById('status');
+  const statusText    = document.getElementById('status-text');
+  const analyzeErr    = document.getElementById('analyze-err');
+  const resultsCard   = document.getElementById('results');
+
+  let videoW = 1, videoH = 1;
+  let roi = null;
+  let dragging = false, startX, startY, curX, curY;
+
+  loadBtn.onclick = async () => {
+    const path = pathInput.value.trim();
+    if (!path) return;
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    loadErr.classList.remove('show');
+    try {
+      const res  = await fetch('/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({path}) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server error');
+      videoW = data.width; videoH = data.height;
+      const img = new Image();
+      img.onload = () => {
+        previewCanvas.width  = videoW; previewCanvas.height = videoH;
+        overlayCanvas.width  = videoW; overlayCanvas.height = videoH;
+        previewCanvas.getContext('2d').drawImage(img, 0, 0);
+        canvasWrap.style.display   = 'block';
+        roiCard.style.display      = 'block';
+        settingsCard.style.display = 'block';
+        roiInfo.textContent = videoW + '×' + videoH + ' · ' + data.duration + 's';
+      };
+      img.src = 'data:image/jpeg;base64,' + data.frame;
+    } catch(e) {
+      loadErr.textContent = e.message; loadErr.classList.add('show');
+    }
+    loadBtn.disabled = false; loadBtn.textContent = 'Load Video Preview';
+  };
+
+  function canvasPos(e) {
+    const rect = overlayCanvas.getBoundingClientRect();
+    const sx = overlayCanvas.width / rect.width, sy = overlayCanvas.height / rect.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - rect.left)*sx, y: (src.clientY - rect.top)*sy };
+  }
+  function drawROI() {
+    const ctx = overlayCanvas.getContext('2d');
+    ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    const x = Math.min(startX,curX), y = Math.min(startY,curY);
+    const w = Math.abs(curX-startX),  h = Math.abs(curY-startY);
+    ctx.strokeStyle='#4fc3f7'; ctx.lineWidth=3; ctx.setLineDash([8,4]);
+    ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle='rgba(79,195,247,0.08)'; ctx.fillRect(x,y,w,h);
+  }
+  overlayCanvas.addEventListener('mousedown', e => {
+    const p=canvasPos(e); startX=curX=p.x; startY=curY=p.y;
+    dragging=true; roi=null; analyzeBtn.disabled=true; roiInfo.textContent='Drawing…';
+  });
+  overlayCanvas.addEventListener('mousemove', e => {
+    if(!dragging) return; const p=canvasPos(e); curX=p.x; curY=p.y; drawROI();
+  });
+  overlayCanvas.addEventListener('mouseup', e => {
+    if(!dragging) return; dragging=false;
+    const p=canvasPos(e); curX=p.x; curY=p.y;
+    const x=Math.min(startX,curX), y=Math.min(startY,curY);
+    const w=Math.abs(curX-startX),  h=Math.abs(curY-startY);
+    if(w>10&&h>10){
+      roi={x,y,w,h}; analyzeBtn.disabled=false;
+      roiInfo.textContent='ROI: '+Math.round(w)+'×'+Math.round(h)+' px — ready to analyze';
+    } else { roiInfo.textContent='Box too small — try again'; }
+    drawROI();
+  });
+
+  analyzeBtn.onclick = async () => {
+    if(!roi) return;
+    analyzeBtn.disabled=true; analyzeErr.classList.remove('show');
+    resultsCard.style.display='none';
+    statusDiv.classList.add('show');
+    statusText.textContent='Sending to Claude AI (may take ~30s)…';
+    const payload={
+      path: pathInput.value.trim(), roi,
+      distance: parseFloat(document.getElementById('distance').value)||800,
+      stroke: document.getElementById('stroke').value,
+      course: document.getElementById('course').value,
+    };
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 300000); // 5 min timeout
+      const res  = await fetch('/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload), signal: controller.signal });
+      clearTimeout(tid);
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error||'Server error');
+      document.getElementById('r-speed').textContent   = data.speed_ms;
+      document.getElementById('r-pace').textContent    = data.pace;
+      document.getElementById('r-dur').textContent     = data.duration;
+      document.getElementById('r-strokes').textContent = data.total_strokes;
+      document.getElementById('r-spl').textContent     = data.strokes_per_length;
+      document.getElementById('r-spm').textContent     = data.strokes_per_minute;
+      const cb = document.getElementById('r-conf');
+      cb.textContent = data.confidence; cb.className='badge '+data.confidence;
+      document.getElementById('r-notes').innerHTML =
+        '<strong>Technique</strong>'+data.technique_notes+'<br><br><strong>How Claude counted</strong>'+data.analysis_notes;
+      const si = document.getElementById('sheet-img');
+      si.src='data:image/jpeg;base64,'+data.contact_sheet; si.style.display='block';
+      resultsCard.style.display='block';
+      resultsCard.scrollIntoView({behavior:'smooth',block:'start'});
+    } catch(e) {
+      analyzeErr.textContent=e.message; analyzeErr.classList.add('show');
+    }
+    statusDiv.classList.remove('show'); analyzeBtn.disabled=false;
+  };
+</script>
+</body>
+</html>
