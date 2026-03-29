@@ -448,7 +448,7 @@
   recog && recog.addEventListener("error", e => {
     orbWrap.classList.remove("listening");
     btnMic.classList.remove("active");
-    setStatus(e.error === "not-allowed" ? "Mic access denied" : "Try again");
+    setStatus(e.error === "not-allowed" ? "Mic access denied" : "Error: " + e.error);
     busy = false;
     setTimeout(startWakeListener, 1500);
   });
