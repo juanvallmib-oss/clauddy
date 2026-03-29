@@ -285,8 +285,19 @@
     audioCtx?.close();
   }
 
+  // Unlock speechSynthesis on iOS (must be called inside a user gesture)
+  let speechUnlocked = false;
+  function unlockSpeech() {
+    if (speechUnlocked) return;
+    speechUnlocked = true;
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    speechSynthesis.speak(u);
+  }
+
   // Manual stop/start toggle
   function toggleMic() {
+    unlockSpeech();
     if (appState === 'recording')                    { stopRecording(); inConversation = false; return; }
     if (appState === 'transcribing' || appState === 'thinking') return;
     if (appState === 'speaking')                     { stopSpeaking(); }
