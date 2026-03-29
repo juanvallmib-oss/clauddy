@@ -166,8 +166,9 @@
 
   // ElevenLabs TTS
   let EL_KEY = localStorage.getItem("el_api_key") || "";
-  if (!EL_KEY) {
-    EL_KEY = (prompt("Enter your ElevenLabs API key (free at elevenlabs.io):") || "").trim();
+  // Re-prompt if key doesn't look valid (must start with sk_)
+  if (!EL_KEY.startsWith("sk_")) {
+    EL_KEY = (prompt("Enter your ElevenLabs API key (starts with sk_):") || "").trim();
     if (EL_KEY) localStorage.setItem("el_api_key", EL_KEY);
   }
   const EL_VOICE_ID = "onwK4e9ZLuTAKqWW03F9"; // Daniel — British male, natural
