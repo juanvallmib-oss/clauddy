@@ -417,12 +417,17 @@
 
   function startListening() {
     if (!recog || busy) return;
-    stopWakeListener();
     if (currentUtterance) { speechSynthesis.cancel(); currentUtterance = null; }
     orbWrap.classList.add("listening");
     btnMic.classList.add("active");
     setStatus("Listening...");
-    recog.start();
+    if (wakeActive) {
+      stopWakeListener();
+      // Wait for wakeRecog to fully stop before starting recog
+      setTimeout(() => { try { recog.start(); } catch(e) {} }, 300);
+    } else {
+      try { recog.start(); } catch(e) {}
+    }
   }
 
   recog && recog.addEventListener("result", async e => {
