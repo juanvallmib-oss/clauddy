@@ -416,18 +416,18 @@
   });
 
   function startListening() {
-    if (!recog || busy) return;
+    // Force-reset stuck state
     if (currentUtterance) { speechSynthesis.cancel(); currentUtterance = null; }
+    busy = false;
+    if (!recog) return;
+    stopWakeListener();
     orbWrap.classList.add("listening");
     btnMic.classList.add("active");
     setStatus("Listening...");
-    if (wakeActive) {
-      stopWakeListener();
-      // Wait for wakeRecog to fully stop before starting recog
-      setTimeout(() => { try { recog.start(); } catch(e) {} }, 300);
-    } else {
-      try { recog.start(); } catch(e) {}
-    }
+    setTimeout(() => {
+      try { recog.start(); }
+      catch(e) { setStatus("Mic error: " + e.message); orbWrap.classList.remove("listening"); btnMic.classList.remove("active"); }
+    }, 300);
   }
 
   recog && recog.addEventListener("result", async e => {
@@ -493,12 +493,17 @@
     utter.rate = 0.97;
     utter.pitch = 0.85;
 
-    utter.onend = utter.onerror = () => {
+    const done = () => {
       orbWrap.classList.remove("speaking");
       currentUtterance = null;
       busy = false;
       startWakeListener();
     };
+    utter.onend = utter.onerror = done;
+    // Chrome bug: onend sometimes never fires — force-reset after estimated duration
+    const wordCount = text.split(" ").length;
+    const timeoutMs = Math.max(4000, wordCount * 400);
+    setTimeout(() => { if (busy && !currentUtterance?.paused) done(); }, timeoutMs);
     speechSynthesis.speak(utter);
   }
 
